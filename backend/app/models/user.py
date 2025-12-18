@@ -29,7 +29,5 @@ class User(db.Model, UserMixin):
         return {'id': self.id, 'username': self.username, 'email': self.email}
 
 
-
-
     def __repr__ (self):
         return "<User %r>" % self.username
