@@ -1,4 +1,5 @@
 from backend.app.db import db
+from sqlalchemy.types import TIMESTAMP
 from sqlalchemy.orm import relationship
 
 class PSD2Connection(db.Model):
@@ -10,8 +11,8 @@ class PSD2Connection(db.Model):
     client_id = db.Column(db.String(255), nullable=False)
     access_token = db.Column(db.String(255), nullable=False)
     refresh_token = db.Column(db.String(255), nullable=False)
-    token_expires_at = db.Column(db.Timestamp, nullable=True)
-    last_synced = db.Column(db.Timestamp, nullable=True)
+    token_expires_at = db.Column(TIMESTAMP, nullable=True)
+    last_synced = db.Column(TIMESTAMP, nullable=True)
 
     def to_dict(self):
         return {
