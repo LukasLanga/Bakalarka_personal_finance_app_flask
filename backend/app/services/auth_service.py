@@ -12,8 +12,6 @@ class AuthService:
             return user
         return None
 
-
-
     @staticmethod
     def register(username, email, password):
         user = User.query.filter_by(email=email).first()
@@ -28,3 +26,10 @@ class AuthService:
         db.session.add(new_user)
         db.session.commit()
         return new_user
+
+    @staticmethod
+    def change_password(user : User, old_password, password):
+        if user.check_password(old_password):
+            user.password = password
+            return True
+        return False

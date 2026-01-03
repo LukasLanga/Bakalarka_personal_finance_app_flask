@@ -87,3 +87,18 @@ class AccountService:
 
         account = Account.query.get(account_id)
         return account.balance
+
+    @staticmethod
+    def list_accounts(user: User):
+        accounts = Account.query.join(
+            UserAccountAccess).filter(
+            UserAccountAccess.user_id == user.id
+        ).all()
+        return accounts
+
+    @staticmethod
+    def user_account_exists(user: User, account_id: int):
+        access = UserAccountAccess.query.filter_by(user=user, account_id=account_id).first()
+        if not access:
+            return False
+        return True
