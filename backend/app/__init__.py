@@ -4,15 +4,15 @@ from flask_login import LoginManager
 
 from backend.app.db import db
 from dotenv import load_dotenv
+from backend.app.models import User
 from backend.app.routes.auth import auth_blueprint
-from backend.app.routes.account import account_blueprint
+from backend.app.routes.account_routes import account_blueprint
 load_dotenv()
 
 
 login_manager = LoginManager()
 def create_app():
     app = Flask(__name__)
-
 
     db_url = os.environ.get('DATABASE_URL')
     if not db_url:
@@ -31,7 +31,6 @@ def create_app():
     with app.app_context():
         from backend.app import models
 
-
     app.register_blueprint(account_blueprint)
     app.register_blueprint(auth_blueprint)
 
@@ -40,9 +39,4 @@ def create_app():
 
 @login_manager.user_loader
 def load_user(user_id):
-    """
-    Loads and returns current user
-    """
-    from backend.app.models import User
-
     return User.query.get(int(user_id))
