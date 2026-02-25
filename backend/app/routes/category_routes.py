@@ -13,15 +13,15 @@ def create_category():
 
     try:
         new_category = CategoryService.create_category(
-            user_id=current_user.id,
-            name=data['name'],
-            type=data['type']
+            user=current_user,
+            category_name=data['name'],
+            category_type=data['type']
         )
         return jsonify(new_category.to_dict()), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-@category_blueprint.route('/api/createCategory', methods=['POST'])
+@category_blueprint.route('/api/deleteCategory', methods=['POST'])
 @login_required
 def delete_category():
     data = request.get_json()
@@ -30,8 +30,8 @@ def delete_category():
 
     try:
         CategoryService.delete_category(
-            user_id=current_user.id,
-            name=data['name']
+            user=current_user,
+            category_name=data['name']
         )
         return jsonify({"success": True}), 200
     except Exception as e:

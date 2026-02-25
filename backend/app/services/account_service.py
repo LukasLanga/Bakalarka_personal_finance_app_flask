@@ -27,11 +27,15 @@ class AccountService:
 
     @staticmethod
     def delete_account(user: User, account_id: int):
-        access =  UserAccountAccess.query.filter_by(user=user, account_id=account_id).first()
+        access =  UserAccountAccess.query.filter_by(user_id=user.id, account_id=account_id).first()
         if not access:
             return False
 
         if access.role == 'owner':
+            from backend.app.models import Transaction
+            if Transaction.query.filter_by(account_id=account_id).first():
+                raise ValueError("Cannot delete account with existing transactions.")
+
             account = Account.query.get(account_id)
             db.session.delete(access)
             db.session.delete(account)
@@ -41,44 +45,46 @@ class AccountService:
 
     @staticmethod
     def add_user(user: User, account_id: int, email: str, role: str):
-        access =  UserAccountAccess.query.filter_by(user=user, account_id=account_id).first()
-        if not access:
-            return False
+        access =  UserAccountAccess.query.filter_by(user_id=user.id, account_id=account_id).first()
+        if not access or access.role != 'owner':
+            raise PermissionError("No permission to add users to this account")
 
-        if access.role == 'owner':
-            account = Account.query.get(account_id)
-            user_to_add = User.query.filter_by(email=email).first()
+        account = Account.query.get(account_id)
+        user_to_add = User.query.filter_by(email=email).first()
 
-            if not account or not user_to_add:
-                return False
+        if not account or not user_to_add:
+            raise ValueError("Account or user to add not found.")
 
-            new_access = UserAccountAccess(user=user_to_add, account=account, role=role)
+        # Check if user already has access
+        if UserAccountAccess.query.filter_by(user_id=user_to_add.id, account_id=account.id).first():
+            raise ValueError("User already has access to this account.")
 
-            db.session.add(new_access)
-            db.session.commit()
-            return True
-        return False
+        new_access = UserAccountAccess(user=user_to_add, account=account, role=role)
+        db.session.add(new_access)
+        db.session.commit()
+        return True
 
     @staticmethod
     def remove_user(user: User, account_id: int, email: str):
-        access = UserAccountAccess.query.filter_by(user=user, account_id=account_id).first()
+        access = UserAccountAccess.query.filter_by(user_id=user.id, account_id=account_id).first()
 
-        if not access:
-            return False
+        if not access or access.role != 'owner':
+            raise PermissionError("No permission to remove users from this account")
 
-        if access.role == 'owner':
-            account = Account.query.get(account_id)
-            user_to_remove = User.query.filter_by(email=email).first()
+        user_to_remove = User.query.filter_by(email=email).first()
+        if not user_to_remove:
+            raise ValueError("User to remove not found.")
+        
+        if user_to_remove.id == user.id:
+            raise ValueError("Cannot remove yourself from an account.")
 
-            if not account or not user_to_remove:
-                return False
+        access_to_delete = UserAccountAccess.query.filter_by(user_id=user_to_remove.id, account_id=account_id).first()
+        if not access_to_delete:
+            raise ValueError("User does not have access to this account.")
 
-            access_to_delete = UserAccountAccess.query.filter_by(user=user_to_remove, account_id=account.id).first()
-
-            db.session.delete(access_to_delete)
-            db.session.commit()
-            return True
-        return False
+        db.session.delete(access_to_delete)
+        db.session.commit()
+        return True
 
     @staticmethod
     def list_users(user: User, account_id: int):
@@ -86,9 +92,7 @@ class AccountService:
             raise PermissionError("No permission to list users of this account")
 
         all_accesses = UserAccountAccess.query.filter_by(account_id=account_id).all()
-
-        users = [access.user for access in all_accesses]
-        return users
+        return [access.user for access in all_accesses]
 
     @staticmethod
     def get_account_balance(user: User, account_id: int):
@@ -108,7 +112,4 @@ class AccountService:
 
     @staticmethod
     def user_account_exists(user: User, account_id: int):
-        access = UserAccountAccess.query.filter_by(user=user, account_id=account_id).first()
-        if not access:
-            return False
-        return True
+        return UserAccountAccess.query.filter_by(user_id=user.id, account_id=account_id).first() is not None
