@@ -7,10 +7,14 @@ from dotenv import load_dotenv
 from backend.app.models import User
 from backend.app.routes.auth import auth_blueprint
 from backend.app.routes.account_routes import account_blueprint
+from backend.app.routes.dashboard_routes import dashboard_blueprint
+from backend.app.routes.category_routes import category_blueprint
+from backend.app.routes.transaction_routes import transaction_blueprint
+
 load_dotenv()
 
-
 login_manager = LoginManager()
+
 def create_app():
     app = Flask(__name__)
 
@@ -31,11 +35,14 @@ def create_app():
     with app.app_context():
         from backend.app import models
 
+    # Register all blueprints
     app.register_blueprint(account_blueprint)
     app.register_blueprint(auth_blueprint)
+    app.register_blueprint(dashboard_blueprint)
+    app.register_blueprint(category_blueprint)
+    app.register_blueprint(transaction_blueprint)
 
     return app
-
 
 @login_manager.user_loader
 def load_user(user_id):
