@@ -1,8 +1,18 @@
 from backend.app.db import db
 from backend.app.models import User, Account, UserAccountAccess
-
+from sqlalchemy import func
 
 class AccountService:
+
+    @staticmethod
+    def get_total_balance(user: User) -> float:
+        """Calculates the sum of balances across all users accounts."""
+        account_ids = [acc.id for acc in AccountService.list_accounts(user)]
+        if not account_ids:
+            return 0.0
+        
+        total_balance = db.session.query(func.sum(Account.balance)).filter(Account.id.in_(account_ids)).scalar()
+        return total_balance or 0.0
 
     @staticmethod
     def create_account(user: User, name: str, balance: float, bank_name: str, currency: str) -> Account:

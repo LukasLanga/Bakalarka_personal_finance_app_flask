@@ -5,6 +5,38 @@ from backend.app.services.account_service import AccountService
 
 account_blueprint = Blueprint('account', __name__)
 
+@account_blueprint.route('/api/accounts', methods=['GET'])
+@login_required
+def list_accounts():
+    try:
+        accounts = AccountService.list_accounts(current_user)
+        return jsonify([acc.to_dict() for acc in accounts]), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@account_blueprint.route('/api/total-balance', methods=['GET'])
+@login_required
+def get_total_balance():
+    try:
+        total_balance = AccountService.get_total_balance(current_user)
+        return jsonify({"total_balance": total_balance}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@account_blueprint.route('/api/get-account-balance', methods=['GET'])
+@login_required
+def get_account_balance():
+    account_id = request.args.get('account_id', type=int)
+    if not account_id:
+        return jsonify({"error": "account_id parameter is required"}), 400
+    try:
+        balance = AccountService.get_account_balance(user=current_user, account_id=account_id)
+        return jsonify({"balance": balance}), 200
+    except (ValueError, PermissionError) as e:
+        return jsonify({"error": str(e)}), 403
+    except Exception as e:
+        return jsonify({"error": "An unexpected error occurred."}), 500
+
 @account_blueprint.route('/api/createAccount', methods=['POST'])
 @login_required
 def create_account():
