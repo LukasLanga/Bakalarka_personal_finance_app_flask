@@ -8,6 +8,7 @@ class Transaction(db.Model):
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'))
     account_id = db.Column(db.Integer, db.ForeignKey('accounts.id'))
     amount = db.Column(db.Numeric(12, 2), nullable=True)
+    name = db.Column(db.String(50), nullable=False)
     date = db.Column(db.Date, nullable=False)
     description = db.Column(db.Text, nullable=False)
     currency = db.Column(db.String(10), nullable=False)
@@ -24,6 +25,7 @@ class Transaction(db.Model):
             'account_id': self.account_id,
             'category_id': self.category_id,
             'amount': self.amount,
+            'name': self.name,
             'date': self.date,
             'description': self.description,
             'currency': self.currency,
