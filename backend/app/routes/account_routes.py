@@ -1,6 +1,8 @@
 from flask import Blueprint, request, jsonify
 from flask_login import login_required, current_user
 from backend.app.services.account_service import AccountService
+from backend.app.services.auth_service import requires_role, get_user_role
+from backend.app.models.invitation import AccountRole
 
 account_blueprint = Blueprint('account', __name__)
 
@@ -31,7 +33,7 @@ def create_account():
 
 @account_blueprint.route('/api/updateAccount', methods=['POST'])
 @login_required
-def delete_account():
+@requires_role(AccountRole.MANAGER, AccountRole.OWNER)
 def update_account():
     data = request.get_json()
     try:
@@ -48,7 +50,7 @@ def update_account():
 
 @account_blueprint.route('/api/deleteAccount', methods=['POST'])
 @login_required
-def add_user():
+@requires_role(AccountRole.OWNER)
 def delete_account():
     data = request.get_json()
     try:

@@ -1,47 +1,35 @@
 from flask import Blueprint, request, jsonify
 from flask_login import login_required, current_user
 from backend.app.services.transaction_service import TransactionService
+from backend.app.services.auth_service import requires_role, get_user_role
+from backend.app.models.invitation import AccountRole
 from decimal import Decimal
+from datetime import datetime
 
 transaction_blueprint = Blueprint('transaction', __name__)
 
-@transaction_blueprint.route('/api/recent-transactions', methods=['GET'])
-@login_required
-def get_recent_transactions():
-    try:
-        limit = int(request.args.get('limit', 5))
-    except (ValueError, TypeError):
-        limit = 5
-    
-    try:
-        transactions = TransactionService.get_recent_transactions(user=current_user, limit=limit)
-        return jsonify([t.to_dict() for t in transactions]), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
 @transaction_blueprint.route('/api/createTransaction', methods=['POST'])
 @login_required
+@requires_role(AccountRole.EDITOR, AccountRole.MANAGER, AccountRole.OWNER)
 def create_transaction():
     data = request.get_json()
-    if not data or not data.get('account_id') or not data.get('amount'):
-        return jsonify({"error": "Missing required fields: account_id and amount"}), 400
-
     try:
+        date_obj = datetime.strptime(data['date'], '%Y-%m-%d').date() if data.get('date') else None
         new_transaction = TransactionService.create_transaction(
             user=current_user,
             account_id=data['account_id'],
             category_id=data.get('category_id'),
             name=data['name'],
             amount=Decimal(data['amount']),
-            date=data.get('date'),
+            date=date_obj,
             description=data.get('description'),
             currency=data.get('currency', 'EUR')
         )
         return jsonify(new_transaction.to_dict()), 201
-    except (ValueError, PermissionError) as e:
-        return jsonify({"error": str(e)}), 403
     except Exception as e:
-        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+        return jsonify({"error": str(e)}), 500
+
+@transaction_blueprint.route('/api/updateTransaction', methods=['POST'])
 @login_required
 @requires_role(AccountRole.EDITOR, AccountRole.MANAGER, AccountRole.OWNER)
 def update_transaction():
@@ -65,11 +53,9 @@ def update_transaction():
 
 @transaction_blueprint.route('/api/deleteTransaction', methods=['POST'])
 @login_required
+@requires_role(AccountRole.EDITOR, AccountRole.MANAGER, AccountRole.OWNER)
 def delete_transaction():
     data = request.get_json()
-    if not data or not data.get('account_id') or not data.get('transaction_id'):
-        return jsonify({"error": "Missing account_id or transaction_id"}), 400
-
     try:
         TransactionService.delete_transaction(
             user=current_user,
@@ -125,27 +111,15 @@ def get_transactions_by_account():
     account_id = request.args.get('account_id', type=int)
     if not account_id:
         return jsonify({"error": "Missing account_id parameter"}), 400
+    
+    user_role = get_user_role(current_user.id, account_id)
+    if not user_role:
+        return jsonify({"message": "Forbidden: You do not have access to this account."}), 403
 
     try:
         transactions = TransactionService.get_all_transactions_by_account(
             user=current_user,
             account_id=account_id
-        )
-        return jsonify([t.to_dict() for t in transactions]), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 403
-
-@transaction_blueprint.route('/api/getTransactionsByCategory', methods=['GET'])
-@login_required
-def get_transactions_by_category():
-    category_id = request.args.get('category_id', type=int)
-    if not category_id:
-        return jsonify({"error": "Missing category_id parameter"}), 400
-
-    try:
-        transactions = TransactionService.get_all_transactions_by_category(
-            user=current_user,
-            category_id=category_id
         )
         return jsonify([t.to_dict() for t in transactions]), 200
     except Exception as e:
