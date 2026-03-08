@@ -14,8 +14,9 @@ def login():
     if not email or not password:
         return jsonify({"ERROR": "Missing email or password"}), 400
 
-    user = AuthService.authenticate(email, password)
-    if not user:
+    user = User.query.filter(User.email.ilike(email)).first()
+
+    if not user or not check_password_hash(user.password_hash, password):
         return jsonify({"ERROR": "Invalid credentials"}), 401
 
     login_user(user)
