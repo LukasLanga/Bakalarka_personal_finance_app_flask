@@ -19,17 +19,11 @@ class BaseState(rx.State):
         """A placeholder auth check."""
         public_routes = {"/login", "/register"}
         try:
-            if self.is_authenticated:
-                return self.on_auth_success()
-            
-            self.logged_in_user = client.get_current_user()
             if not self.is_authenticated:
                 self.logged_in_user = client.get_current_user()
             self.is_authenticated = True
         except (httpx.HTTPStatusError, Exception):
             self.is_authenticated = False
-            if self.router.page.path not in public_routes:
-                return rx.redirect("/login")
             current_path = self.router.page.raw_path
             if current_path not in public_routes:
                 yield rx.redirect("/login")
@@ -43,12 +37,6 @@ class BaseState(rx.State):
         self.logged_in_user = None
         return rx.redirect("/login")
 
-    def on_auth_success(self):
-        """
-        A placeholder event that can be overridden by child states
-        to load data after a successful authentication check.
-        """
-        return
 class ManageAccountsState(BaseState):
     """State for managing accounts."""
     is_editing: bool = False
@@ -270,7 +258,7 @@ class LoginState(BaseState):
     async def handle_login(self):
         self.error_message = ""
         if not self.email or not self.password:
-            self.error_message = self.translations["Email and password are required."]
+            self.error_message = "Email and password are required."
             return
         self.is_loading = True
         try:
@@ -338,6 +326,151 @@ class RegisterState(BaseState):
             self.is_loading = False
             self.password = ""
             self.confirm_password = ""
+
+class TransactionFormState(BaseState):
+    """State for the transaction form."""
+    account_name: str = ""
+    category_name: str = ""
+    name: str = ""
+    amount: float = 0.0
+    date: str = str(datetime.utcnow().date())
+    description: str = ""
+    error_message: str = ""
+    is_loading: bool = False
+    currency: str = "EUR"
+
+    def reset_form(self):
+        self.account_name = ""
+        self.category_name = ""
+        self.name = ""
+        self.amount = 0.0
+        self.date = str(datetime.utcnow().date())
+        self.description = ""
+        self.error_message = ""
+        self.is_loading = False
+        self.currency = "EUR"
+
+    def set_name(self, value: str):
+        self.name = value
+
+    def set_amount(self, value: str):
+        try:
+            self.amount = float(value) if value else 0.0
+        except ValueError:
+            self.error_message = "Invalid amount. Please enter a number."
+
+    def set_date(self, value: str):
+        self.date = value
+
+    def set_description(self, value: str):
+        self.description = value
+
+    async def set_account_name(self, value: str):
+        self.account_name = value
+        dashboard_state = await self.get_state(DashboardState)
+        for acc in dashboard_state.accounts:
+            name = acc.get("name") if isinstance(acc, dict) else acc.name
+            if name == value:
+                self.currency = acc.get("currency") if isinstance(acc, dict) else acc.currency
+                break
+
+    def set_category_name(self, value: str):
+        self.category_name = value
+
+    async def handle_submit(self, accounts: List[Union[Account, Dict[str, Any]]], categories: List[Union[Category, Dict[str, Any]]]):
+        self.is_loading = True
+        self.error_message = ""
+        try:
+            def get_name(item):
+                return item.get("name") if isinstance(item, dict) else item.name
+            
+            def get_id(item):
+                return item.get("id") if isinstance(item, dict) else item.id
+            
+            def get_currency(item):
+                return item.get("currency") if isinstance(item, dict) else item.currency
+
+            selected_account = next((acc for acc in accounts if get_name(acc) == self.account_name), None)
+            if not selected_account:
+                self.error_message = "Please select a valid account."
+                self.is_loading = False
+                return
+
+            selected_category = next((cat for cat in categories if get_name(cat) == self.category_name), None)
+            if not selected_category:
+                self.error_message = "Please select a valid category."
+                self.is_loading = False
+                return
+
+            client.create_transaction(
+                account_id=get_id(selected_account),
+                category_id=get_id(selected_category),
+                name=self.name,
+                amount=self.amount,
+                date=self.date,
+                description=self.description,
+                currency=get_currency(selected_account)
+            )
+            
+            self.reset_form()
+            return [DashboardState.toggle_transaction_modal, DashboardState.load_accounts, DashboardState.load_dashboard_summary]
+
+        except Exception as e:
+            self.error_message = str(e)
+        finally:
+            self.is_loading = False
+
+class AccountFormState(BaseState):
+    """State for the account form."""
+    name: str = ""
+    bank_name: str = ""
+    balance: float = 0.0
+    currency: str = "EUR"
+    error_message: str = ""
+    is_loading: bool = False
+
+    def set_name(self, value: str):
+        self.name = value
+
+    def set_bank_name(self, value: str):
+        self.bank_name = value
+
+    def set_balance(self, value: str):
+        try:
+            self.balance = float(value) if value else 0.0
+        except ValueError:
+            self.error_message = "Invalid balance. Please enter a number."
+
+    def set_currency(self, value: str):
+        self.currency = value
+
+    async def handle_submit(self):
+        self.is_loading = True
+        self.error_message = ""
+        try:
+            if not self.name or not self.bank_name:
+                self.error_message = self.translations["Name and Bank Name are required."]
+                self.is_loading = False
+                return
+
+            client.create_account(
+                name=self.name,
+                bank_name=self.bank_name,
+                balance=self.balance,
+                currency=self.currency
+            )
+            
+            self.name = ""
+            self.bank_name = ""
+            self.balance = 0.0
+            self.currency = "EUR"
+            
+            return [DashboardState.toggle_account_modal, DashboardState.load_accounts, DashboardState.load_dashboard_summary]
+
+        except Exception as e:
+            self.error_message = f"Failed to create account: {e}"
+        finally:
+            self.is_loading = False
 
 class CategoriesState(BaseState):
     """State for the categories page."""
