@@ -2,7 +2,11 @@ import reflex as rx
 from ..models.models import User, Account, DashboardSummary, Category, Transaction, Invitation, AccountUser
 from ..api import client
 import httpx
-from typing import List
+from typing import List, Union, Dict, Any, Optional
+from datetime import datetime
+from ..locale import TRANSLATIONS
+
+PIE_CHART_COLORS = ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF", "#FF9F40"]
 
 class BaseState(rx.State):
     """Global state for authentication."""
@@ -180,11 +184,22 @@ class ManageAccountsState(BaseState):
 
 class DashboardState(BaseState):
     """State for the main dashboard."""
-    summary: DashboardSummary | None = None
     accounts: List[Account] = []
+    categories: List[Category] = []
+    dashboard_summary: Optional[DashboardSummary] = None
+    yearly_overview: List[Dict[str, Any]] = []
     pending_invitations: List[Invitation] = []
+    user_roles: Dict[str, str] = {}
     is_loading: bool = False
+    show_transaction_modal: bool = False
+    show_account_modal: bool = False
+    show_manage_accounts_modal: bool = False
+    show_invitation_modal: bool = False
+    selected_invitation: Optional[Invitation] = None
     is_sidebar_collapsed: bool = True
+    error_message: str = ""
+    selected_account_id: int | None = None
+
     @rx.var
     def pending_invitations_count(self) -> int:
         return len(self.pending_invitations)
@@ -311,12 +326,6 @@ class DashboardState(BaseState):
         finally:
             self.is_loading = False
 
-    def on_auth_success(self):
-        """
-        This overrides the base method. It is called by check_auth
-        after a successful authentication.
-        """
-        return self.load_dashboard_data
     async def load_user_roles(self):
         try:
             self.user_roles = client.get_user_roles()
@@ -329,6 +338,191 @@ class DashboardState(BaseState):
         except Exception as e:
             print(f"Error loading categories: {e}")
 
+    async def load_dashboard_summary(self):
+        try:
+            self.dashboard_summary = client.get_dashboard_summary(account_id=self.selected_account_id)
+        except Exception as e:
+            print(f"Error loading dashboard summary: {e}")
+
+    async def load_yearly_overview(self):
+        try:
+            self.yearly_overview = client.get_yearly_overview(account_id=self.selected_account_id)
+        except Exception as e:
+            print(f"Error loading yearly overview: {e}")
+
+    async def load_pending_invitations(self):
+        try:
+            self.pending_invitations = client.get_pending_invitations()
+        except Exception as e:
+            print(f"Error loading invitations: {e}")
+
+    async def accept_invitation(self):
+        if not self.selected_invitation:
+            return
+        try:
+            client.accept_invitation(self.selected_invitation.token)
+            self.set_show_invitation_modal(False)
+            await self.load_pending_invitations()
+            return self.load_accounts()
+        except Exception as e:
+            print(f"Error accepting invitation: {e}")
+
+    async def decline_invitation(self, token: str):
+        try:
+            client.decline_invitation(token)
+            await self.load_pending_invitations()
+        except Exception as e:
+            print(f"Error declining invitation: {e}")
+
+    def navigate_to_transaction(self, account_id: int, transaction_id: int):
+        return rx.redirect(f"/transaction/{account_id}/{transaction_id}")
+
+class TransactionDetailState(BaseState):
+    """State for the transaction detail page."""
+    transaction: Transaction | None = None
+    account_name: str = ""
+    category_name: str = ""
+    is_loading: bool = False
+    error_message: str = ""
+    current_user_role: str = ""
+    
+    # Edit mode state
+    is_editing: bool = False
+    edit_name: str = ""
+    edit_amount: float = 0.0
+    edit_date: str = ""
+    edit_description: str = ""
+    edit_category_name: str = ""
+
+    def set_edit_name(self, value: str):
+        self.edit_name = value
+
+    def set_edit_amount(self, value: str):
+        try:
+            self.edit_amount = float(value) if value else 0.0
+        except ValueError:
+            pass
+
+    def set_edit_date(self, value: str):
+        self.edit_date = value
+
+    def set_edit_description(self, value: str):
+        self.edit_description = value
+
+    def set_edit_category_name(self, value: str):
+        self.edit_category_name = value
+
+    async def get_transaction_detail(self):
+        """Fetch transaction details based on URL params."""
+        self.is_editing = False
+        self.error_message = ""
+        self.transaction = None
+
+        async for event in self.check_auth():
+            yield event
+        
+        if not self.is_authenticated:
+            return
+
+        self.is_loading = True
+        try:
+            account_id = int(self.router.page.params.get("account_id", 0))
+            transaction_id = int(self.router.page.params.get("transaction_id", 0))
+            
+            if not account_id or not transaction_id:
+                self.error_message = "Missing transaction or account ID."
+                return
+
+            self.transaction = client.get_transaction(account_id, transaction_id)
+            
+            # Fetch account name
+            accounts = client.get_accounts()
+            account = next((acc for acc in accounts if acc.id == account_id), None)
+            self.account_name = account.name if account else "Unknown Account"
+
+            # Fetch category name
+            if self.transaction.category_id:
+                categories = client.list_categories()
+                category = next((cat for cat in categories if cat.id == self.transaction.category_id), None)
+                self.category_name = category.name if category else "Uncategorized"
+            else:
+                self.category_name = "Uncategorized"
+
+            # Fetch user role for this account
+            users = client.get_account_users(account_id)
+            current_user_access = next((u for u in users if u.id == self.logged_in_user.id), None)
+            if current_user_access:
+                self.current_user_role = current_user_access.role
+
+        except Exception as e:
+            self.error_message = f"Error loading transaction: {e}"
+        finally:
+            self.is_loading = False
+
+    def toggle_edit_mode(self):
+        self.is_editing = not self.is_editing
+        if self.is_editing and self.transaction:
+            self.edit_name = self.transaction.name
+            self.edit_amount = self.transaction.amount
+            
+            if self.transaction.date:
+                date_str = str(self.transaction.date)
+                try:
+                    parsed_date = datetime.strptime(date_str, "%a, %d %b %Y %H:%M:%S %Z")
+                    self.edit_date = parsed_date.strftime("%Y-%m-%d")
+                except ValueError:
+                    try:
+                        parsed_date = datetime.fromisoformat(date_str)
+                        self.edit_date = parsed_date.strftime("%Y-%m-%d")
+                    except ValueError:
+                        self.edit_date = date_str[:10]
+            else:
+                self.edit_date = ""
+
+            self.edit_description = self.transaction.description or ""
+            self.edit_category_name = self.category_name
+            return DashboardState.load_categories
+        return
+
+    async def save_changes(self):
+        self.is_loading = True
+        try:
+            categories = client.list_categories()
+            selected_category = next((cat for cat in categories if cat.name == self.edit_category_name), None)
+            category_id = selected_category.id if selected_category else None
+
+            updated_transaction = client.update_transaction(
+                transaction_id=self.transaction.id,
+                account_id=self.transaction.account_id,
+                name=self.edit_name,
+                amount=self.edit_amount,
+                date=self.edit_date,
+                description=self.edit_description,
+                category_id=category_id
+            )
+            
+            self.transaction = updated_transaction
+            self.category_name = self.edit_category_name if selected_category else "Uncategorized"
+            self.is_editing = False
+            
+            return [DashboardState.load_dashboard_summary]
+
+        except Exception as e:
+            self.error_message = f"Failed to update transaction: {e}"
+        finally:
+            self.is_loading = False
+
+    async def delete_transaction(self):
+        if not self.transaction:
+            return
+
+        self.is_loading = True
+        try:
+            client.delete_transaction(self.transaction.account_id, self.transaction.id)
+            return [DashboardState.load_dashboard_summary, rx.redirect("/")]
+        except Exception as e:
+            self.error_message = f"Failed to delete transaction: {e}"
+            self.is_loading = False
 
 class LoginState(BaseState):
     """State for the login form."""

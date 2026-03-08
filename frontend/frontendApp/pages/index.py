@@ -1,0 +1,383 @@
+import reflex as rx
+from ..state.state import DashboardState
+from ..components.sidebar import sidebar
+from ..components.topbar import topbar
+from ..components.transaction_modal import transaction_modal
+from ..components.account_modal import account_modal
+from ..components.manage_accounts_modal import manage_accounts_modal
+from ..components.invitation_modal import invitation_modal
+from ..styles import BORDER_COLOR, SUBTLE_TEXT_COLOR, TEXT_COLOR, PRIMARY_COLOR
+from ..models.models import Transaction
+
+def summary_card(title: str, value: str, icon: str, icon_bg: str, icon_color: str) -> rx.Component:
+    """A card for displaying a summary metric."""
+    return rx.card(
+        rx.vstack(
+            rx.hstack(
+                rx.box(
+                    rx.icon(icon, size=24, color=icon_color),
+                    bg=icon_bg,
+                    border_radius="8px",
+                    padding="8px",
+                ),
+                rx.spacer(),
+                width="100%",
+                align="center",
+            ),
+            rx.spacer(),
+            rx.vstack(
+                rx.text(DashboardState.translations[title], size="2", color=SUBTLE_TEXT_COLOR, weight="medium"),
+                rx.heading(value, size="6", weight="bold"),
+                spacing="1",
+                align="start",
+            ),
+            spacing="3",
+            height="100%",
+        ),
+        size="3",
+        width="100%",
+    )
+
+def transaction_row(transaction: Transaction) -> rx.Component:
+    """A single row for the recent transactions table."""
+    detail_url = "/transaction/" + transaction.account_id.to_string() + "/" + transaction.id.to_string()
+
+    return rx.table.row(
+        rx.table.row_header_cell(
+            rx.link(
+                rx.text(transaction.name, weight="bold", color=TEXT_COLOR, size="2"),
+                href=detail_url,
+                underline="none",
+                color="inherit",
+                width="100%",
+                display="block",
+                padding_y="16px",
+            )
+        ),
+        rx.table.cell(
+            rx.link(
+                rx.text(
+                    DashboardState.account_id_to_name[transaction.account_id.to_string()],
+                    size="2",
+                    color=SUBTLE_TEXT_COLOR
+                ),
+                href=detail_url,
+                underline="none",
+                color="inherit",
+                width="100%",
+                display="block",
+                padding_y="16px",
+            ),
+            vertical_align="middle",
+        ),
+        rx.table.cell(
+            rx.link(
+                rx.box(
+                    rx.text(rx.moment(transaction.date, format="DD MMMM YYYY"), size="2", weight="medium", color=SUBTLE_TEXT_COLOR),
+                    bg="#F1F5F9",
+                    padding="4px 8px",
+                    border_radius="4px",
+                    display="inline-block",
+                ),
+                href=detail_url,
+                underline="none",
+                color="inherit",
+                width="100%",
+                display="block",
+                padding_y="16px",
+            ),
+            vertical_align="middle",
+        ),
+        rx.table.cell(
+            rx.link(
+                rx.text(
+                    f"{transaction.amount:,.2f} {transaction.currency}",
+                    weight="bold",
+                    color=rx.cond(transaction.amount < 0, "#E11D48", "#059669"), # Red for negative, Green for positive
+                    align="right",
+                ),
+                href=detail_url,
+                underline="none",
+                color="inherit",
+                width="100%",
+                display="block",
+                padding_y="16px",
+            ),
+            vertical_align="middle",
+        ),
+        _hover={"background_color": "#F8FAFC"},
+        border_bottom=f"1px solid {BORDER_COLOR}",
+    )
+
+def yearly_overview_chart() -> rx.Component:
+    """A bar chart showing income vs. expenses for the last 12 months."""
+    return rx.recharts.responsive_container(
+        rx.recharts.bar_chart(
+            rx.recharts.x_axis(data_key="month"),
+            rx.recharts.y_axis(),
+            rx.recharts.tooltip(),
+            rx.recharts.bar(data_key="income", fill="#10B981", name=DashboardState.translations["Income"], radius=[4, 4, 0, 0]),
+            rx.recharts.bar(data_key="expenses", fill="#F43F5E", name=DashboardState.translations["Expenses"], radius=[4, 4, 0, 0]),
+            data=DashboardState.yearly_overview,
+        ),
+        min_height=250,
+    )
+
+def yearly_overview_card() -> rx.Component:
+    """A card containing the yearly overview bar chart."""
+    return rx.box(
+        rx.vstack(
+            rx.hstack(
+                rx.vstack(
+                    rx.heading(DashboardState.translations["Overview"], size="4"),
+                    rx.text(DashboardState.translations["Your income and expenses for the last 12 months."], color=SUBTLE_TEXT_COLOR, size="2"),
+                    align="start",
+                    spacing="1",
+                ),
+                rx.spacer(),
+                rx.hstack(
+                    rx.box(bg="#10B981", width="12px", height="12px", border_radius="full"),
+                    rx.text(DashboardState.translations["Income"], size="2", color=SUBTLE_TEXT_COLOR),
+                    rx.box(bg="#F43F5E", width="12px", height="12px", border_radius="full"),
+                    rx.text(DashboardState.translations["Expenses"], size="2", color=SUBTLE_TEXT_COLOR),
+                    spacing="3",
+                    align="center",
+                ),
+                width="100%",
+            ),
+            yearly_overview_chart(),
+            spacing="4",
+            width="100%",
+        ),
+        background="#FFFFFF",
+        border=f"1px solid {BORDER_COLOR}",
+        box_shadow="0px 1px 2px rgba(0, 0, 0, 0.05)",
+        border_radius="12px",
+        padding="24px",
+        width="100%",
+    )
+
+def recent_transactions_table() -> rx.Component:
+    """A table to display recent transactions."""
+    return rx.box(
+        rx.vstack(
+            rx.hstack(
+                rx.heading(DashboardState.translations["Recent Transactions"], size="4", color=TEXT_COLOR),
+                rx.spacer(),
+                rx.link(DashboardState.translations["View All"], href="/transactions", size="2", color=PRIMARY_COLOR, weight="bold"),
+                width="100%",
+                align="center",
+                padding_bottom="24px",
+            ),
+            rx.table.root(
+                rx.table.header(
+                    rx.table.row(
+                        rx.table.column_header_cell(DashboardState.translations["NAME"], color=SUBTLE_TEXT_COLOR, font_size="12px", letter_spacing="0.6px"),
+                        rx.table.column_header_cell(DashboardState.translations["ACCOUNT"], color=SUBTLE_TEXT_COLOR, font_size="12px", letter_spacing="0.6px"),
+                        rx.table.column_header_cell(DashboardState.translations["DATE"], color=SUBTLE_TEXT_COLOR, font_size="12px", letter_spacing="0.6px"),
+                        rx.table.column_header_cell(DashboardState.translations["AMOUNT"], color=SUBTLE_TEXT_COLOR, font_size="12px", letter_spacing="0.6px", text_align="right"),
+                        border_bottom=f"1px solid {BORDER_COLOR}",
+                    )
+                ),
+                rx.table.body(
+                    rx.foreach(
+                        DashboardState.dashboard_summary.recent_transactions,
+                        transaction_row
+                    )
+                ),
+                variant="surface",
+                size="2",
+                width="100%",
+            ),
+            spacing="0",
+            width="100%",
+        ),
+        background="#FFFFFF",
+        border=f"1px solid {BORDER_COLOR}",
+        box_shadow="0px 1px 2px rgba(0, 0, 0, 0.05)",
+        border_radius="12px",
+        padding="24px",
+        width="100%",
+    )
+
+def spending_by_category_pie_chart() -> rx.Component:
+    """A pie chart for spending by category."""
+    return rx.recharts.responsive_container(
+        rx.recharts.pie_chart(
+            rx.recharts.pie(
+                rx.foreach(
+                    DashboardState.spending_by_category_dict,
+                    lambda item: rx.recharts.cell(fill=item["fill"]),
+                ),
+                data=DashboardState.spending_by_category_dict,
+                data_key="amount",
+                name_key="category_name",
+                cx="50%",
+                cy="50%",
+                inner_radius="60%",
+                outer_radius="80%",
+                label_line=False,
+            ),
+            rx.recharts.tooltip(),
+        ),
+        min_height=250,
+    )
+
+def custom_legend() -> rx.Component:
+    """A custom legend for the pie chart."""
+    return rx.vstack(
+        rx.foreach(
+            DashboardState.spending_by_category_dict,
+            lambda item: rx.grid(
+                rx.hstack(
+                    rx.box(bg=item["fill"], width="12px", height="12px", border_radius="4px"),
+                    rx.text(item["category_name"], size="2", white_space="nowrap"),
+                    spacing="2",
+                    align="center",
+                ),
+                rx.text(f"{item['percentage']:.0f}%", size="2", weight="bold", text_align="right"),
+                grid_template_columns="1fr auto",
+                gap="4",
+                width="100%",
+            )
+        ),
+        spacing="2",
+        width="100%",
+        max_width="240px",
+    )
+
+def spending_by_category_list() -> rx.Component:
+    """A card containing the spending by category pie chart and legend."""
+    return rx.card(
+        rx.vstack(
+            rx.heading(DashboardState.translations["Spending by Category"], size="4", padding_bottom="4"),
+            rx.cond(
+                DashboardState.spending_by_category_dict,
+                rx.vstack(
+                    spending_by_category_pie_chart(),
+                    custom_legend(),
+                    spacing="4",
+                    width="100%",
+                    align="center",
+                ),
+                rx.center(
+                    rx.text(DashboardState.translations["No spending data to display for this period."]),
+                    min_height="350px",
+                    width="100%",
+                ),
+            ),
+            spacing="4",
+            width="100%",
+        ),
+        width="100%",
+    )
+
+def dashboard_content() -> rx.Component:
+    """The main content of the dashboard, shown when data is loaded."""
+    return rx.vstack(
+        # Summary Cards
+        rx.grid(
+            summary_card(
+                "Total Balance",
+                rx.text(f"{DashboardState.dashboard_summary.total_balance:,.2f} ", DashboardState.selected_account_currency),
+                "wallet",
+                rx.color("green", 3),
+                rx.color("green", 9),
+            ),
+            summary_card(
+                "Monthly Income",
+                rx.text(f"{DashboardState.dashboard_summary.monthly_income:,.2f} ", DashboardState.selected_account_currency),
+                "arrow_up",
+                rx.color("blue", 3),
+                rx.color("blue", 9),
+            ),
+            summary_card(
+                "Monthly Expenses",
+                rx.text(f"{DashboardState.dashboard_summary.monthly_expenses:,.2f} ", DashboardState.selected_account_currency),
+                "arrow_down",
+                rx.color("red", 3),
+                rx.color("red", 9),
+            ),
+            columns={"base": "1", "md": "3"},
+            gap="4",
+            width="100%",
+        ),
+        # Yearly Overview
+        yearly_overview_card(),
+        # Charts and Recent Transactions
+        rx.grid(
+            recent_transactions_table(),
+            spending_by_category_list(),
+            columns={"base": "1", "md": "2fr 1fr"},
+            gap="4",
+            width="100%",
+        ),
+        spacing="5",
+        width="100%",
+    )
+
+@rx.page(route="/", on_load=DashboardState.on_page_load, title="Dashboard")
+def index() -> rx.Component:
+    """The main dashboard page."""
+    return rx.box(
+        topbar(),
+        rx.hstack(
+            sidebar(),
+            rx.box(
+                rx.vstack(
+                    rx.hstack(
+                        # Hamburger menu for mobile
+                        rx.icon(
+                            "menu",
+                            size=24,
+                            on_click=DashboardState.toggle_sidebar,
+                            display=["block", "block", "none", "none", "none"],
+                            cursor="pointer",
+                        ),
+                        rx.vstack(
+                            rx.heading(DashboardState.translations["Dashboard"], size="8"),
+                            rx.text(DashboardState.translations["Welcome back! Here is your financial overview."], color=SUBTLE_TEXT_COLOR),
+                            align="start",
+                            spacing="1",
+                        ),
+                        rx.spacer(),
+                        align="center",
+                        spacing="4",
+                        width="100%",
+                    ),
+                    rx.cond(
+                        DashboardState.is_loading,
+                        rx.center(rx.spinner(), width="100%", height="80vh"),
+                        rx.cond(
+                            DashboardState.error_message != "",
+                            rx.center(
+                                rx.vstack(
+                                    rx.heading(DashboardState.translations["Error Loading Dashboard"], color="red"),
+                                    rx.code_block(DashboardState.error_message, language="json"),
+                                ),
+                                width="100%",
+                                height="80vh",
+                            ),
+                            rx.cond(
+                                DashboardState.dashboard_summary,
+                                dashboard_content(),
+                                rx.center(rx.text(DashboardState.translations["No dashboard data available."]), height="80vh"),
+                            )
+                        )
+                    ),
+                    spacing="5",
+                    padding="2em",
+                    width="100%",
+                ),
+                padding_top="80px",
+                margin_left=["0", "0", "288px", "288px", "288px"],
+                width=["100%", "100%", "calc(100% - 288px)", "calc(100% - 288px)", "calc(100% - 288px)"],
+            ),
+            align_items="flex-start",
+        ),
+        transaction_modal(),
+        account_modal(),
+        manage_accounts_modal(),
+        invitation_modal(),
+        background_color="#F6F8F6",
+    )
