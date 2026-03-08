@@ -10,8 +10,15 @@ from decimal import Decimal
 class TransactionService:
 
     @staticmethod
-    def get_recent_transactions(user: User, limit: int = 5):
-        account_ids = [acc.id for acc in AccountService.list_accounts(user)]
+    def get_recent_transactions(user: User, limit: int = 5, account_id: int = None):
+        if account_id:
+            access = UserAccountAccess.query.filter_by(user_id=user.id, account_id=account_id).first()
+            if not access:
+                return []
+            account_ids = [account_id]
+        else:
+            account_ids = [acc.id for acc in AccountService.list_accounts(user)]
+        
         if not account_ids:
             return []
 
@@ -20,20 +27,50 @@ class TransactionService:
         ).order_by(Transaction.date.desc(), Transaction.id.desc()).limit(limit).all()
 
     @staticmethod
-    def get_dashboard_summary(user: User, recent_transaction_limit: int = 5):
-        user_accounts = AccountService.list_accounts(user)
-        if not user_accounts:
-            return {
-                "total_balance": 0,
-                "monthly_income": 0,
-                "monthly_expenses": 0,
-                "recent_transactions": [],
-                "spending_by_category": [],
-            }
+    def get_transactions_between_dates(user: User, start_date: datetime, end_date: datetime, account_id: int = None):
+        if account_id:
+            access = UserAccountAccess.query.filter_by(user_id=user.id, account_id=account_id).first()
+            if not access:
+                return []
+            account_ids = [account_id]
+        else:
+            account_ids = [acc.id for acc in AccountService.list_accounts(user)]
+        
+        if not account_ids:
+            return []
 
-        account_ids = [acc.id for acc in user_accounts]
+        return db.session.query(Transaction).filter(
+            Transaction.account_id.in_(account_ids),
+            Transaction.date >= start_date,
+            Transaction.date <= end_date
+        ).all()
 
-        total_balance = AccountService.get_total_balance(user)
+    @staticmethod
+    def get_dashboard_summary(user: User, recent_transaction_limit: int = 5, account_id: int = None):
+        if account_id:
+            access = UserAccountAccess.query.filter_by(user_id=user.id, account_id=account_id).first()
+            if not access:
+                 return {
+                    "total_balance": 0,
+                    "monthly_income": 0,
+                    "monthly_expenses": 0,
+                    "recent_transactions": [],
+                    "spending_by_category": [],
+                }
+            account_ids = [account_id]
+            total_balance = AccountService.get_account_balance(user, account_id)
+        else:
+            user_accounts = AccountService.list_accounts(user)
+            if not user_accounts:
+                return {
+                    "total_balance": 0,
+                    "monthly_income": 0,
+                    "monthly_expenses": 0,
+                    "recent_transactions": [],
+                    "spending_by_category": [],
+                }
+            account_ids = [acc.id for acc in user_accounts]
+            total_balance = AccountService.get_total_balance(user)
 
         current_month = datetime.now().month
         current_year = datetime.now().year
@@ -47,7 +84,7 @@ class TransactionService:
         monthly_income = monthly_transactions_query.filter(Transaction.amount > 0).with_entities(func.sum(Transaction.amount)).scalar() or 0
         monthly_expenses = monthly_transactions_query.filter(Transaction.amount < 0).with_entities(func.sum(Transaction.amount)).scalar() or 0
 
-        recent_transactions = TransactionService.get_recent_transactions(user, limit=recent_transaction_limit)
+        recent_transactions = TransactionService.get_recent_transactions(user, limit=recent_transaction_limit, account_id=account_id)
 
         spending_by_category = db.session.query(
             Category.name,
@@ -55,8 +92,6 @@ class TransactionService:
         ).join(Transaction, Transaction.category_id == Category.id).filter(
             Transaction.account_id.in_(account_ids),
             Transaction.amount < 0,
-            extract('month', Transaction.date) == current_month,
-            extract('year', Transaction.date) == current_year
         ).group_by(Category.name).order_by(func.sum(Transaction.amount).asc()).all()
 
         return {

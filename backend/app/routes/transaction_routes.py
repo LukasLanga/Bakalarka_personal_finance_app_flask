@@ -60,13 +60,25 @@ def delete_transaction():
     except Exception as e:
         return jsonify({"error": str(e)}), 404
 
+@transaction_blueprint.route('/api/recent-transactions', methods=['GET'])
+@login_required
+def get_recent_transactions():
+    limit = request.args.get('limit', 5, type=int)
+    try:
+        transactions = TransactionService.get_recent_transactions(user=current_user, limit=limit)
+        return jsonify([t.to_dict() for t in transactions]), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @transaction_blueprint.route('/api/getTransaction', methods=['GET'])
 @login_required
 def get_transaction():
     account_id = request.args.get('account_id', type=int)
     transaction_id = request.args.get('transaction_id', type=int)
-    if not account_id or not transaction_id:
-        return jsonify({"error": "Missing account_id or transaction_id parameter"}), 400
+
+    user_role = get_user_role(current_user.id, account_id)
+    if not user_role:
+        return jsonify({"message": "Forbidden: You do not have access to this account."}), 403
 
     try:
         transaction = TransactionService.get_transaction(
