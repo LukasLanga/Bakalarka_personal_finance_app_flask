@@ -9,10 +9,11 @@ class Category(db.Model):
     name = db.Column(db.String(100), nullable=False)
     type = db.Column(db.String(50), nullable=False)
 
-    def to_dict(self):
+    def to_dict(self, usage_count=0):
         return {
             'id': self.id,
             'user_id': self.user_id,
             'name': self.name,
-            'type': self.type
+            'type': self.type,
+            'usage_count': usage_count
         }

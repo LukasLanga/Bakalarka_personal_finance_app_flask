@@ -41,5 +41,4 @@ def delete_category():
 @login_required
 def list_categories():
     categories = CategoryService.get_all_categories(current_user)
-    return jsonify([category.to_dict() for category in categories]), 200
-
+    return jsonify(categories), 200
