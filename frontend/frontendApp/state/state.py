@@ -338,3 +338,154 @@ class RegisterState(BaseState):
             self.is_loading = False
             self.password = ""
             self.confirm_password = ""
+
+class CategoriesState(BaseState):
+    """State for the categories page."""
+    categories: List[Category] = []
+    new_category_name: str = ""
+    new_category_type: str = "Expense"
+    is_loading: bool = False
+    error_message: str = ""
+    filter_type: str = "all"
+    show_add_category_modal: bool = False
+    show_delete_confirmation: bool = False
+    category_to_delete_name: str = ""
+
+    @rx.var
+    def filtered_categories(self) -> List[Category]:
+        if self.filter_type == "all":
+            return self.categories
+        return [cat for cat in self.categories if cat.type.lower() == self.filter_type.lower()]
+
+    async def load_categories(self):
+        async for event in self.check_auth():
+            yield event
+        
+        if not self.is_authenticated:
+            return
+
+        self.is_loading = True
+        try:
+            self.categories = client.list_categories()
+        except Exception as e:
+            self.error_message = f"Error loading categories: {e}"
+        finally:
+            self.is_loading = False
+
+    def set_new_category_name(self, name: str):
+        self.new_category_name = name
+
+    def set_new_category_type(self, type):
+        self.new_category_type = type
+
+    def set_filter_type(self, type: str):
+        self.filter_type = type
+
+    def toggle_add_category_modal(self):
+        self.show_add_category_modal = not self.show_add_category_modal
+
+    def open_delete_confirmation(self, name: str):
+        self.show_delete_confirmation = True
+        self.category_to_delete_name = name
+
+    def close_delete_confirmation(self):
+        self.show_delete_confirmation = False
+        self.category_to_delete_name = ""
+
+    async def create_category(self):
+        if not self.new_category_name:
+            self.error_message = "Category name cannot be empty."
+            return
+
+        try:
+            client.create_category(self.new_category_name, self.new_category_type.lower())
+            self.new_category_name = ""
+            self.toggle_add_category_modal()
+            await self.load_categories()
+        except Exception as e:
+            self.error_message = f"Failed to create category: {e}"
+
+    async def delete_category(self):
+        try:
+            client.delete_category(self.category_to_delete_name)
+            self.close_delete_confirmation()
+            await self.load_categories()
+        except Exception as e:
+            self.error_message = f"Failed to delete category: {e}"
+
+class TransactionsState(BaseState):
+    """State for the transactions page."""
+    transactions: List[Transaction] = []
+    accounts: List[Account] = []
+    categories: List[Category] = []
+    is_loading: bool = False
+    error_message: str = ""
+    search_query: str = ""
+    selected_account_filter: str = "All Accounts"
+    selected_category_filter: str = "All Categories"
+
+    @rx.var
+    def account_id_to_name(self) -> Dict[str, str]:
+        return {str(acc.id): acc.name for acc in self.accounts}
+
+    @rx.var
+    def category_id_to_name(self) -> Dict[str, str]:
+        return {str(cat.id): cat.name for cat in self.categories}
+
+    @rx.var
+    def account_filter_options(self) -> List[str]:
+        return ["All Accounts"] + [acc.name for acc in self.accounts]
+
+    @rx.var
+    def category_filter_options(self) -> List[str]:
+        return ["All Categories"] + [cat.name for cat in self.categories]
+
+    @rx.var
+    def filtered_transactions(self) -> List[Transaction]:
+        filtered = self.transactions
+        
+        if self.search_query:
+            query = self.search_query.lower()
+            filtered = [
+                t for t in filtered
+                if query in t.name.lower() or query in (t.description or "").lower()
+            ]
+        
+        if self.selected_account_filter != "All Accounts":
+            selected_acc = next((acc for acc in self.accounts if acc.name == self.selected_account_filter), None)
+            if selected_acc:
+                filtered = [t for t in filtered if t.account_id == selected_acc.id]
+
+        if self.selected_category_filter != "All Categories":
+            selected_cat = next((cat for cat in self.categories if cat.name == self.selected_category_filter), None)
+            if selected_cat:
+                filtered = [t for t in filtered if t.category_id == selected_cat.id]
+
+        return filtered
+
+    def set_search_query(self, value: str):
+        self.search_query = value
+
+    def set_selected_account_filter(self, value: str):
+        self.selected_account_filter = value
+
+    def set_selected_category_filter(self, value: str):
+        self.selected_category_filter = value
+
+    async def load_data(self):
+        async for event in self.check_auth():
+            yield event
+        
+        if not self.is_authenticated:
+            return
+
+        self.is_loading = True
+        self.error_message = ""
+        try:
+            self.accounts = client.get_accounts()
+            self.categories = client.list_categories()
+            self.transactions = client.get_all_transactions()
+        except Exception as e:
+            self.error_message = f"Error loading data: {e}"
+        finally:
+            self.is_loading = False
