@@ -76,20 +76,19 @@ class LoginState(BaseState):
     def toggle_show_password(self):
         self.show_password = not self.show_password
 
-    def handle_login(self):
+    async def handle_login(self):
         self.error_message = ""
         if not self.email or not self.password:
-            self.error_message = "Email and password are required."
+            self.error_message = self.translations["Email and password are required."]
             return
         self.is_loading = True
         try:
             if client.login(self.email, self.password):
-                self.check_auth()
-                return rx.redirect("/")
+                yield rx.redirect("/")
         except httpx.HTTPStatusError:
             self.error_message = "Invalid email or password."
-        except Exception:
-            self.error_message = "An unexpected error occurred."
+        except Exception as e:
+            self.error_message = f"An unexpected error occurred: {e}"
         finally:
             self.is_loading = False
             self.password = ""
@@ -123,7 +122,7 @@ class RegisterState(BaseState):
     def toggle_show_confirm_password(self):
         self.show_confirm_password = not self.show_confirm_password
 
-    def handle_registration(self):
+    async def handle_registration(self):
         self.error_message = ""
         if not self.username or not self.email or not self.password or not self.confirm_password:
             self.error_message = "All fields are required."
@@ -135,16 +134,15 @@ class RegisterState(BaseState):
         try:
             if client.register(self.username, self.email, self.password):
                 if client.login(self.email, self.password):
-                    self.check_auth()
-                    return rx.redirect("/")
+                    yield rx.redirect("/")
         except httpx.HTTPStatusError as e:
             try:
                 error_detail = e.response.json().get("ERROR", "Registration failed.")
                 self.error_message = error_detail
             except:
                 self.error_message = "An unknown registration error occurred."
-        except Exception:
-            self.error_message = "An unexpected error occurred."
+        except Exception as e:
+            self.error_message = f"An unexpected error occurred: {e}"
         finally:
             self.is_loading = False
             self.password = ""
