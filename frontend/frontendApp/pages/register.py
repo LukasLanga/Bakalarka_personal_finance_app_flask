@@ -5,7 +5,7 @@ from ..styles import base_style, card_style, input_style, button_style, label_st
 def password_input(placeholder: str, on_blur_event, show_var, toggle_event) -> rx.Component:
     return rx.box(
         rx.input(
-            placeholder=placeholder,
+            placeholder=RegisterState.translations[placeholder],
             on_blur=on_blur_event,
             type=rx.cond(show_var, "text", "password"),
             style=input_style,
@@ -33,8 +33,8 @@ def register_page() -> rx.Component:
         rx.vstack(
             # Header Section
             rx.vstack(
-                rx.heading("Create an Account", size="7", font_weight="700"),
-                rx.text("Start making your financial life easier.", color=SUBTLE_TEXT_COLOR),
+                rx.heading(RegisterState.translations["Create an Account"], size="7", font_weight="700"),
+                rx.text(RegisterState.translations["Start making your financial life easier."], color=SUBTLE_TEXT_COLOR),
                 align="center",
                 padding="32px 32px 8px",
                 width="100%",
@@ -42,21 +42,21 @@ def register_page() -> rx.Component:
             # Form
             rx.vstack(
                 rx.vstack(
-                    rx.text("Username", style=label_style),
-                    rx.input(placeholder="Enter your username", on_blur=RegisterState.set_username, style=input_style),
+                    rx.text(RegisterState.translations["Username"], style=label_style),
+                    rx.input(placeholder=RegisterState.translations["Enter your username"], on_blur=RegisterState.set_username, style=input_style),
                     spacing="2",
                     align="stretch",
                     width="100%",
                 ),
                 rx.vstack(
-                    rx.text("Email Address", style=label_style),
-                    rx.input(placeholder="name@example.com", on_blur=RegisterState.set_email, type="email", style=input_style),
+                    rx.text(RegisterState.translations["Email Address"], style=label_style),
+                    rx.input(placeholder=RegisterState.translations["name@example.com"], on_blur=RegisterState.set_email, type="email", style=input_style),
                     spacing="2",
                     align="stretch",
                     width="100%",
                 ),
                 rx.vstack(
-                    rx.text("Password", style=label_style),
+                    rx.text(RegisterState.translations["Password"], style=label_style),
                     password_input(
                         placeholder="Create a strong password",
                         on_blur_event=RegisterState.set_password,
@@ -68,7 +68,7 @@ def register_page() -> rx.Component:
                     width="100%",
                 ),
                 rx.vstack(
-                    rx.text("Confirm Password", style=label_style),
+                    rx.text(RegisterState.translations["Confirm Password"], style=label_style),
                     password_input(
                         placeholder="Confirm your password",
                         on_blur_event=RegisterState.set_confirm_password,
@@ -83,7 +83,7 @@ def register_page() -> rx.Component:
                     rx.cond(
                         RegisterState.is_loading,
                         rx.spinner(color="black"),
-                        "Create Account",
+                        RegisterState.translations["Create Account"],
                     ),
                     on_click=RegisterState.handle_registration,
                     style=button_style,
@@ -100,8 +100,8 @@ def register_page() -> rx.Component:
             # Footer section
             rx.center(
                 rx.text(
-                    "Already have an account? ",
-                    rx.link("Log in", href="/login", color=PRIMARY_COLOR, font_weight="500"),
+                    RegisterState.translations["Already have an account? "],
+                    rx.link(RegisterState.translations["Log in"], href="/login", color=PRIMARY_COLOR, font_weight="500"),
                     color="#475569",
                 ),
                 background_color="#F8FAFC",

@@ -5,7 +5,7 @@ from ..styles import base_style, card_style, input_style, button_style, label_st
 def password_input() -> rx.Component:
     return rx.box(
         rx.input(
-            placeholder="Enter your password",
+            placeholder=LoginState.translations["Enter your password"],
             on_blur=LoginState.set_password,
             type=rx.cond(LoginState.show_password, "text", "password"),
             style=input_style,
@@ -33,8 +33,8 @@ def login_page() -> rx.Component:
         rx.vstack(
             # Header Section
             rx.vstack(
-                rx.heading("Log In", size="7", font_weight="700"),
-                rx.text("Welcome back! Please enter your details.", color=SUBTLE_TEXT_COLOR),
+                rx.heading(LoginState.translations["Log In"], size="7", font_weight="700"),
+                rx.text(LoginState.translations["Welcome back! Please enter your details."], color=SUBTLE_TEXT_COLOR),
                 align="center",
                 padding="32px 32px 8px",
                 width="100%",
@@ -42,17 +42,17 @@ def login_page() -> rx.Component:
             # Form
             rx.vstack(
                 rx.vstack(
-                    rx.text("Email Address", style=label_style),
-                    rx.input(placeholder="name@example.com", on_blur=LoginState.set_email, type="email", style=input_style),
+                    rx.text(LoginState.translations["Email Address"], style=label_style),
+                    rx.input(placeholder=LoginState.translations["name@example.com"], on_blur=LoginState.set_email, type="email", style=input_style),
                     spacing="2",
                     align="stretch",
                     width="100%",
                 ),
                 rx.vstack(
                     rx.hstack(
-                        rx.text("Password", style=label_style),
+                        rx.text(LoginState.translations["Password"], style=label_style),
                         rx.spacer(),
-                        rx.link("Forgot password?", href="#", font_weight="500", color=PRIMARY_COLOR),
+                        rx.link(LoginState.translations["Forgot password?"], href="#", font_weight="500", color=PRIMARY_COLOR),
                         justify="between",
                         width="100%",
                     ),
@@ -65,7 +65,7 @@ def login_page() -> rx.Component:
                     rx.cond(
                         LoginState.is_loading,
                         rx.spinner(color="black"),
-                        "Log In",
+                        LoginState.translations["Log In"],
                     ),
                     on_click=LoginState.handle_login,
                     style=button_style,
@@ -82,8 +82,8 @@ def login_page() -> rx.Component:
             # Footer section
             rx.center(
                 rx.text(
-                    "Don't have an account? ",
-                    rx.link("Sign up", href="/register", color=PRIMARY_COLOR, font_weight="500"),
+                    LoginState.translations["Don't have an account? "],
+                    rx.link(LoginState.translations["Sign up"], href="/register", color=PRIMARY_COLOR, font_weight="500"),
                     color="#475569",
                 ),
                 background_color="#F8FAFC",
