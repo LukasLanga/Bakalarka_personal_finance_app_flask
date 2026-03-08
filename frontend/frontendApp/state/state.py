@@ -1,5 +1,5 @@
 import reflex as rx
-from ..models.models import User, Account, DashboardSummary
+from ..models.models import User, Account, DashboardSummary, Category, Transaction, Invitation, AccountUser
 from ..api import client
 import httpx
 from typing import List
@@ -8,25 +8,40 @@ class BaseState(rx.State):
     """Global state for authentication."""
     is_authenticated: bool = False
     logged_in_user: User | None = None
+    locale: str = "en"
 
-    def check_auth(self):
-        """
-        This event is called on every page load.
-        It checks if the user is authenticated and redirects if not.
-        If authentication is successful, it returns an event to be handled by the page's state.
-        """
+    @rx.var
+    def translations(self) -> dict:
+        """The translations for the current locale."""
+        return TRANSLATIONS.get(self.locale, TRANSLATIONS["en"])
+
+    async def check_auth(self):
+        """A placeholder auth check."""
         public_routes = {"/login", "/register"}
         try:
             if self.is_authenticated:
                 return self.on_auth_success()
             
             self.logged_in_user = client.get_current_user()
+            if not self.is_authenticated:
+                self.logged_in_user = client.get_current_user()
             self.is_authenticated = True
-            return self.on_auth_success()
         except (httpx.HTTPStatusError, Exception):
             self.is_authenticated = False
             if self.router.page.path not in public_routes:
                 return rx.redirect("/login")
+            current_path = self.router.page.raw_path
+            if current_path not in public_routes:
+                yield rx.redirect("/login")
+
+    def set_locale(self, lang: str):
+        self.locale = lang
+        return rx.redirect(self.router.page.raw_path)
+
+    def logout(self):
+        self.is_authenticated = False
+        self.logged_in_user = None
+        return rx.redirect("/login")
 
     def on_auth_success(self):
         """
