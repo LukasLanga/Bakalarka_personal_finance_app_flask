@@ -1,6 +1,5 @@
 from flask import Blueprint, request, jsonify
 from flask_login import login_required, current_user
-
 from backend.app.services.account_service import AccountService
 
 account_blueprint = Blueprint('account', __name__)
@@ -13,29 +12,6 @@ def list_accounts():
         return jsonify([acc.to_dict() for acc in accounts]), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-@account_blueprint.route('/api/total-balance', methods=['GET'])
-@login_required
-def get_total_balance():
-    try:
-        total_balance = AccountService.get_total_balance(current_user)
-        return jsonify({"total_balance": total_balance}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@account_blueprint.route('/api/get-account-balance', methods=['GET'])
-@login_required
-def get_account_balance():
-    account_id = request.args.get('account_id', type=int)
-    if not account_id:
-        return jsonify({"error": "account_id parameter is required"}), 400
-    try:
-        balance = AccountService.get_account_balance(user=current_user, account_id=account_id)
-        return jsonify({"balance": balance}), 200
-    except (ValueError, PermissionError) as e:
-        return jsonify({"error": str(e)}), 403
-    except Exception as e:
-        return jsonify({"error": "An unexpected error occurred."}), 500
 
 @account_blueprint.route('/api/createAccount', methods=['POST'])
 @login_required
@@ -53,60 +29,56 @@ def create_account():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
+@account_blueprint.route('/api/updateAccount', methods=['POST'])
+@login_required
+def delete_account():
+def update_account():
+    data = request.get_json()
+    try:
+        updated_account = AccountService.update_account(
+            user=current_user,
+            account_id=data.get('account_id'),
+            name=data.get('name'),
+            bank_name=data.get('bank_name'),
+            currency=data.get('currency')
+        )
+        return jsonify(updated_account.to_dict()), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @account_blueprint.route('/api/deleteAccount', methods=['POST'])
 @login_required
+def add_user():
 def delete_account():
     data = request.get_json()
     try:
         AccountService.delete_account(user=current_user, account_id=data.get('account_id'))
-        return jsonify({"success": True}), 200
-    except (ValueError, PermissionError) as e:
-        return jsonify({"error": str(e)}), 400
+        return jsonify({"success": True, "message": "Account deleted successfully"}), 200
     except Exception as e:
         return jsonify({"error": "An unexpected error occurred."}), 500
 
-@account_blueprint.route('/api/addAccountUser', methods=['POST'])
+@account_blueprint.route('/api/get-account-balance', methods=['GET'])
 @login_required
-def add_user():
-    data = request.get_json()
-    try:
-        AccountService.add_user(
-            user=current_user,
-            account_id=data.get('account_id'),
-            email=data.get('email'),
-            role=data.get('role'),
-        )
-        return jsonify({"success": True}), 200
-    except (ValueError, PermissionError) as e:
-        return jsonify({"error": str(e)}), 400
-    except Exception as e:
-        return jsonify({"error": "An unexpected error occurred."}), 500
+def get_account_balance():
+    account_id = request.args.get('account_id', type=int)
+    if not account_id:
+        return jsonify({"error": "account_id parameter is required"}), 400
+        
+    user_role = get_user_role(current_user.id, account_id)
+    if not user_role:
+        return jsonify({"message": "Forbidden: You do not have access to this account."}), 403
 
-@account_blueprint.route('/api/removeAccountUser', methods=['POST'])
-@login_required
-def remove_user():
-    data = request.get_json()
     try:
-        AccountService.remove_user(
-            user=current_user,
-            account_id=data.get('account_id'),
-            email=data.get('email')
-        )
-        return jsonify({"success": True}), 200
-    except (ValueError, PermissionError) as e:
-        return jsonify({"error": str(e)}), 400
+        balance = AccountService.get_account_balance(user=current_user, account_id=account_id)
+        return jsonify({"balance": balance}), 200
     except Exception as e:
         return jsonify({"error": "An unexpected error occurred."}), 500
 
 @account_blueprint.route('/api/listAccountUsers', methods=['POST'])
 @login_required
-def list_users():
-    data = request.get_json()
+def get_total_balance():
     try:
-        users = AccountService.list_users(user=current_user, account_id=data.get('account_id'))
-        user_list = [{"id": user.id, "email": user.email, "username": user.username} for user in users]
-        return jsonify({"users": user_list}), 200
-    except (ValueError, PermissionError) as e:
-        return jsonify({"error": str(e)}), 400
+        total_balance = AccountService.get_total_balance(current_user)
+        return jsonify({"total_balance": total_balance}), 200
     except Exception as e:
-        return jsonify({"error": "An unexpected error occurred."}), 500
+        return jsonify({"error": str(e)}), 500

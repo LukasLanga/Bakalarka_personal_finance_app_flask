@@ -26,6 +26,26 @@ class AccountService:
         return new_account
 
     @staticmethod
+    def update_account(user: User, account_id: int, name: str = None, bank_name: str = None, currency: str = None) -> Account:
+        access = UserAccountAccess.query.filter_by(user_id=user.id, account_id=account_id).first()
+        if not access or access.role != 'owner':
+            raise PermissionError("No permission to update this account")
+
+        account = Account.query.get(account_id)
+        if not account:
+            raise ValueError("Account not found")
+
+        if name:
+            account.name = name
+        if bank_name:
+            account.bank_name = bank_name
+        if currency:
+            account.currency = currency
+        
+        db.session.commit()
+        return account
+
+    @staticmethod
     def delete_account(user: User, account_id: int):
         access =  UserAccountAccess.query.filter_by(user_id=user.id, account_id=account_id).first()
         if not access:
@@ -33,11 +53,10 @@ class AccountService:
 
         if access.role == 'owner':
             from backend.app.models import Transaction
-            if Transaction.query.filter_by(account_id=account_id).first():
-                raise ValueError("Cannot delete account with existing transactions.")
+            Transaction.query.filter_by(account_id=account_id).delete()
+            UserAccountAccess.query.filter_by(account_id=account_id).delete()
 
             account = Account.query.get(account_id)
-            db.session.delete(access)
             db.session.delete(account)
             db.session.commit()
             return True

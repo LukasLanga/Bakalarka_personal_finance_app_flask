@@ -42,6 +42,26 @@ def create_transaction():
         return jsonify({"error": str(e)}), 403
     except Exception as e:
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
+@login_required
+@requires_role(AccountRole.EDITOR, AccountRole.MANAGER, AccountRole.OWNER)
+def update_transaction():
+    data = request.get_json()
+    try:
+        amount = Decimal(data['amount']) if data.get('amount') is not None else None
+        date_obj = datetime.strptime(data['date'], '%Y-%m-%d').date() if data.get('date') else None
+        updated_transaction = TransactionService.update_transaction(
+            user=current_user,
+            transaction_id=data['transaction_id'],
+            account_id=data['account_id'],
+            amount=amount,
+            name=data.get('name'),
+            description=data.get('description'),
+            category_id=data.get('category_id'),
+            date=date_obj
+        )
+        return jsonify(updated_transaction.to_dict()), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @transaction_blueprint.route('/api/deleteTransaction', methods=['POST'])
 @login_required

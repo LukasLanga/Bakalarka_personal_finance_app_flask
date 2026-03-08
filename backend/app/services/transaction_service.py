@@ -134,6 +134,37 @@ class TransactionService:
         return transaction
 
     @staticmethod
+    def update_transaction(user: User, transaction_id: int, account_id: int, amount: Decimal = None, name: str = None, description: str = None, category_id: int = None, date: datetime = None):
+        access = UserAccountAccess.query.filter_by(user_id=user.id, account_id=account_id).first()
+        if not access:
+            raise PermissionError('User does not have access to this account')
+        
+        transaction = Transaction.query.get(transaction_id)
+        if not transaction or transaction.account_id != account_id:
+            raise ValueError('Transaction not found')
+
+        account = Account.query.get(account_id)
+        
+        if amount is not None:
+            account.balance -= transaction.amount
+            transaction.amount = amount
+            account.balance += amount
+        
+        if name is not None:
+            transaction.name = name
+        if description is not None:
+            transaction.description = description
+        if date is not None:
+            transaction.date = date
+        if category_id is not None:
+             if not CategoryService.user_category_exists(user, category_id):
+                raise ValueError("Category not found or does not belong to user.")
+             transaction.category_id = category_id
+
+        db.session.commit()
+        return transaction
+
+    @staticmethod
     def delete_transaction(user: User, account_id, transaction_id):
         access = UserAccountAccess.query.filter_by(user_id=user.id, account_id=account_id).first()
         if not access:
