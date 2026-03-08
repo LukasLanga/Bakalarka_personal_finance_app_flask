@@ -56,12 +56,17 @@ class DashboardState(BaseState):
     accounts: List[Account] = []
     pending_invitations: List[Invitation] = []
     is_loading: bool = False
+    is_sidebar_collapsed: bool = True
     @rx.var
     def pending_invitations_count(self) -> int:
         return len(self.pending_invitations)
 
     def load_dashboard_data(self):
         """Load all data needed for the dashboard."""
+
+    def toggle_sidebar(self):
+        self.is_sidebar_collapsed = not self.is_sidebar_collapsed
+
     async def handle_manage_modal_change(self, open: bool):
         self.show_manage_accounts_modal = open
         if not open:
