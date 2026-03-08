@@ -54,10 +54,29 @@ class DashboardState(BaseState):
     """State for the main dashboard."""
     summary: DashboardSummary | None = None
     accounts: List[Account] = []
+    pending_invitations: List[Invitation] = []
     is_loading: bool = False
+    @rx.var
+    def pending_invitations_count(self) -> int:
+        return len(self.pending_invitations)
 
     def load_dashboard_data(self):
         """Load all data needed for the dashboard."""
+    async def handle_manage_modal_change(self, open: bool):
+        self.show_manage_accounts_modal = open
+        if not open:
+            manage_state = await self.get_state(ManageAccountsState)
+            manage_state.cancel_edit()
+
+    def set_show_invitation_modal(self, open: bool):
+        self.show_invitation_modal = open
+        if not open:
+            self.selected_invitation = None
+
+    def select_and_show_invitation(self, inv: Invitation):
+        self.selected_invitation = inv
+        self.show_invitation_modal = True
+
         self.is_loading = True
         try:
             self.summary = client.get_dashboard_summary()
