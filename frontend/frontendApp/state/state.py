@@ -189,11 +189,91 @@ class DashboardState(BaseState):
     def pending_invitations_count(self) -> int:
         return len(self.pending_invitations)
 
-    def load_dashboard_data(self):
-        """Load all data needed for the dashboard."""
+    @rx.var
+    def can_add_transaction(self) -> bool:
+        """Check if the user has editor rights on at least one account."""
+        editable_roles = ["editor", "manager", "owner"]
+        for role in self.user_roles.values():
+            if role in editable_roles:
+                return True
+        return False
+
+    @rx.var
+    def account_names(self) -> List[str]:
+        return [acc.name for acc in self.accounts]
+
+    @rx.var
+    def category_names(self) -> List[str]:
+        return [cat.name for cat in self.categories]
+
+    @rx.var
+    def spending_by_category_dict(self) -> List[Dict[str, Any]]:
+        if self.dashboard_summary and self.dashboard_summary.spending_by_category:
+            total_spending = sum(item.amount for item in self.dashboard_summary.spending_by_category)
+            if total_spending == 0:
+                return []
+
+            data_with_colors = []
+            for i, item in enumerate(self.dashboard_summary.spending_by_category):
+                item_dict = item.dict()
+                item_dict["fill"] = PIE_CHART_COLORS[i % len(PIE_CHART_COLORS)]
+                item_dict["percentage"] = round((item.amount / total_spending) * 100)
+                data_with_colors.append(item_dict)
+            return data_with_colors
+        return []
+
+    @rx.var
+    def account_id_to_name(self) -> Dict[str, str]:
+        return {str(acc.id): acc.name for acc in self.accounts}
+
+    @rx.var
+    def selected_account_currency(self) -> str:
+        if self.selected_account_id:
+            for acc in self.accounts:
+                if acc.id == self.selected_account_id:
+                    return acc.currency
+        elif self.accounts:
+             return self.accounts[0].currency
+        return "EUR"
+
+    async def on_page_load(self):
+        self.show_transaction_modal = False
+        self.show_account_modal = False
+        self.show_manage_accounts_modal = False
+        
+        async for event in self.check_auth():
+            yield event
+        if self.is_authenticated:
+            async for event in self.load_accounts():
+                yield event
+            
+            if self.selected_account_id is None and self.accounts:
+                self.selected_account_id = self.accounts[0].id
+            
+            await self.load_user_roles()
+            await self.load_dashboard_summary()
+            await self.load_yearly_overview()
+            await self.load_pending_invitations()
 
     def toggle_sidebar(self):
         self.is_sidebar_collapsed = not self.is_sidebar_collapsed
+
+    async def toggle_transaction_modal(self):
+        self.show_transaction_modal = not self.show_transaction_modal
+        if not self.show_transaction_modal:
+            form_state = await self.get_state(TransactionFormState)
+            form_state.reset_form()
+        else:
+            self.load_categories()
+
+    def toggle_account_modal(self):
+        self.show_account_modal = not self.show_account_modal
+        if not self.show_account_modal:
+            form_state = self.get_state(AccountFormState)
+            form_state.error_message = ""
+
+    def toggle_manage_accounts_modal(self):
+        self.show_manage_accounts_modal = not self.show_manage_accounts_modal
 
     async def handle_manage_modal_change(self, open: bool):
         self.show_manage_accounts_modal = open
@@ -237,6 +317,18 @@ class DashboardState(BaseState):
         after a successful authentication.
         """
         return self.load_dashboard_data
+    async def load_user_roles(self):
+        try:
+            self.user_roles = client.get_user_roles()
+        except Exception as e:
+            print(f"Error loading user roles: {e}")
+
+    def load_categories(self):
+        try:
+            self.categories = client.list_categories()
+        except Exception as e:
+            print(f"Error loading categories: {e}")
+
 
 class LoginState(BaseState):
     """State for the login form."""
