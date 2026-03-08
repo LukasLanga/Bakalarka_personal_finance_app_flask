@@ -57,7 +57,7 @@ def delete_account():
         AccountService.delete_account(user=current_user, account_id=data.get('account_id'))
         return jsonify({"success": True, "message": "Account deleted successfully"}), 200
     except Exception as e:
-        return jsonify({"error": "An unexpected error occurred."}), 500
+        return jsonify({"error": str(e)}), 500
 
 @account_blueprint.route('/api/get-account-balance', methods=['GET'])
 @login_required
@@ -76,7 +76,7 @@ def get_account_balance():
     except Exception as e:
         return jsonify({"error": "An unexpected error occurred."}), 500
 
-@account_blueprint.route('/api/listAccountUsers', methods=['POST'])
+@account_blueprint.route('/api/total-balance', methods=['GET'])
 @login_required
 def get_total_balance():
     try:
