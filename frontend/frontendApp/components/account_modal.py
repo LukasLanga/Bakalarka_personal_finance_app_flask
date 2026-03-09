@@ -1,5 +1,5 @@
 import reflex as rx
-from ..state.state import DashboardState, AccountFormState
+from ..state import DashboardState, AccountFormState
 
 def account_modal() -> rx.Component:
     """A modal to add a new account."""

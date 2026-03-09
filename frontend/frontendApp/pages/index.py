@@ -1,5 +1,5 @@
 import reflex as rx
-from ..state.state import DashboardState
+from ..state import DashboardState
 from ..components.sidebar import sidebar
 from ..components.topbar import topbar
 from ..components.transaction_modal import transaction_modal

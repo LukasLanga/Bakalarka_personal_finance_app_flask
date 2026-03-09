@@ -1,5 +1,5 @@
 import reflex as rx
-from ..state.state import DashboardState, TransactionFormState
+from ..state import DashboardState, TransactionFormState
 
 def transaction_modal() -> rx.Component:
     """A modal to add a new transaction."""

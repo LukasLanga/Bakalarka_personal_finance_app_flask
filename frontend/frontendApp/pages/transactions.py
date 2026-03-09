@@ -1,5 +1,5 @@
 import reflex as rx
-from ..state.state import BaseState, DashboardState, TransactionsState
+from ..state import BaseState, DashboardState, TransactionsState
 from ..api import client
 from ..models.models import Transaction, Account, Category
 from ..components.sidebar import sidebar

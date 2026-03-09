@@ -1,5 +1,5 @@
 import reflex as rx
-from ..state.state import LoginState
+from ..state import LoginState
 from ..styles import base_style, card_style, input_style, button_style, label_style, PRIMARY_COLOR, SUBTLE_TEXT_COLOR, BACKGROUND_COLOR, BORDER_COLOR
 
 def password_input() -> rx.Component:

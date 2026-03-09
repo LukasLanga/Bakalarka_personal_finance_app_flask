@@ -1,5 +1,5 @@
 import reflex as rx
-from ..state.state import BaseState
+from ..state import BaseState
 from ..api import client
 from ..styles import TEXT_COLOR, SUBTLE_TEXT_COLOR, PRIMARY_COLOR, BORDER_COLOR
 

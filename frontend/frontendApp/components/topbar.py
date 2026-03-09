@@ -1,5 +1,5 @@
 import reflex as rx
-from ..state.state import DashboardState
+from ..state import DashboardState
 from ..models.models import Invitation
 from .language_switcher import language_switcher
 

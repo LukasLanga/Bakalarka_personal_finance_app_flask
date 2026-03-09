@@ -1,5 +1,5 @@
 import reflex as rx
-from ..state.state import DashboardState, ManageAccountsState
+from ..state import DashboardState, ManageAccountsState
 from ..models.models import AccountUser
 
 def user_access_row(user: AccountUser) -> rx.Component:

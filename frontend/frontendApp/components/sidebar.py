@@ -1,5 +1,5 @@
 import reflex as rx
-from ..state.state import BaseState, DashboardState
+from ..state import BaseState, DashboardState
 from ..styles import PRIMARY_COLOR, BORDER_COLOR, SUBTLE_TEXT_COLOR, TEXT_COLOR
 from ..models.models import Account
 

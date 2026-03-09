@@ -1,5 +1,5 @@
 import reflex as rx
-from ..state.state import DashboardState, ManageAccountsState
+from ..state import DashboardState, ManageAccountsState
 from ..components.sidebar import sidebar
 from ..components.topbar import topbar
 from ..models.models import AccountUser

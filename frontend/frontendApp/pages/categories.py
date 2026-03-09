@@ -1,5 +1,5 @@
 import reflex as rx
-from ..state.state import BaseState, CategoriesState, DashboardState
+from ..state import BaseState, CategoriesState, DashboardState
 from ..components.sidebar import sidebar
 from ..components.topbar import topbar
 from ..components.transaction_modal import transaction_modal
@@ -34,7 +34,7 @@ def add_category_modal() -> rx.Component:
             ),
             rx.flex(
                 rx.dialog.close(
-                    rx.button(CategoriesState.translations["Cancel"], on_click=CategoriesState.toggle_add_category_modal, variant="soft", color_scheme="gray")
+                    rx.button(CategoriesState.translations["Cancel"], on_click=lambda: CategoriesState.toggle_add_category_modal(False), variant="soft", color_scheme="gray")
                 ),
                 rx.button(CategoriesState.translations["Add Category"], on_click=CategoriesState.create_category, color_scheme="green"),
                 spacing="3",
@@ -43,6 +43,7 @@ def add_category_modal() -> rx.Component:
             ),
         ),
         open=CategoriesState.show_add_category_modal,
+        on_open_change=CategoriesState.toggle_add_category_modal,
     )
 
 @rx.page(route="/categories", on_load=CategoriesState.load_categories)
@@ -77,7 +78,7 @@ def categories() -> rx.Component:
                             default_value="all",
                         ),
                         rx.spacer(),
-                        rx.button(CategoriesState.translations["Add Category"], on_click=CategoriesState.toggle_add_category_modal, color_scheme="green", size="3"),
+                        rx.button(CategoriesState.translations["Add Category"], on_click=lambda: CategoriesState.toggle_add_category_modal(True), color_scheme="green", size="3"),
                         width="100%",
                         justify="between",
                     ),

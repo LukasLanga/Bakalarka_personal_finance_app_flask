@@ -1,5 +1,5 @@
 import reflex as rx
-from ..state.state import BaseState
+from ..state import BaseState
 
 def language_switcher() -> rx.Component:
     """A component to switch the language."""

@@ -1,5 +1,5 @@
 import reflex as rx
-from ..state.state import DashboardState
+from ..state import DashboardState
 
 def get_role_description(role: str) -> str:
     """Returns a description for a given account role."""
