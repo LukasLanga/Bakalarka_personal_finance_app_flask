@@ -120,6 +120,9 @@ TRANSLATIONS = {
         "Create Account": "Create Account",
         "Email and password are required.": "Email and password are required.",
         "Please select a valid account.": "Please select a valid account.",
+        "Date": "Date",
+        "Amount": "Amount",
+        "Account": "Account",
     },
     "sk": {
         "Dashboard": "Prehľad",
@@ -242,6 +245,9 @@ TRANSLATIONS = {
         "Create Account": "Vytvoriť účet",
         "Email and password are required.": "E-mail a heslo sú povinné.",
         "Please select a valid account.": "Prosím, vyberte platný účet.",
+        "Date": "Dátum",
+        "Amount": "Suma",
+        "Account": "Účet",
     },
     "cz": {
         "Dashboard": "Přehled",
@@ -364,5 +370,8 @@ TRANSLATIONS = {
         "Create Account": "Vytvořit účet",
         "Email and password are required.": "E-mail a heslo jsou povinné.",
         "Please select a valid account.": "Prosím, vyberte platný účet.",
+        "Date": "Datum",
+        "Amount": "Částka",
+        "Account": "Účet",
     },
 }
