@@ -100,8 +100,27 @@ def get_transaction():
 @login_required
 def get_all_transactions():
     try:
-        transactions = TransactionService.get_all_transactions(user=current_user)
-        return jsonify([t.to_dict() for t in transactions]), 200
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+        search_query = request.args.get('search_query', None, type=str)
+        account_id = request.args.get('account_id', None, type=int)
+        category_id = request.args.get('category_id', None, type=int)
+
+        paginated_transactions = TransactionService.get_all_transactions(
+            user=current_user, 
+            page=page, 
+            per_page=per_page,
+            search_query=search_query,
+            account_id=account_id,
+            category_id=category_id
+        )
+        
+        return jsonify({
+            "transactions": [t.to_dict() for t in paginated_transactions.items],
+            "total_pages": paginated_transactions.pages,
+            "current_page": paginated_transactions.page,
+            "total_items": paginated_transactions.total
+        }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

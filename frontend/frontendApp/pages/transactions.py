@@ -159,35 +159,49 @@ def transactions() -> rx.Component:
                                 height="80vh",
                             ),
                             # Transactions Table
-                            rx.box(
-                                rx.table.root(
-                                    rx.table.header(
-                                        rx.table.row(
-                                            rx.table.column_header_cell(TransactionsState.translations["NAME"], color=SUBTLE_TEXT_COLOR, font_size="12px", letter_spacing="0.6px"),
-                                            rx.table.column_header_cell(TransactionsState.translations["ACCOUNT"], color=SUBTLE_TEXT_COLOR, font_size="12px", letter_spacing="0.6px"),
-                                            rx.table.column_header_cell(TransactionsState.translations["DATE"], color=SUBTLE_TEXT_COLOR, font_size="12px", letter_spacing="0.6px"),
-                                            rx.table.column_header_cell(TransactionsState.translations["AMOUNT"], color=SUBTLE_TEXT_COLOR, font_size="12px", letter_spacing="0.6px", text_align="right"),
-                                            border_bottom=f"1px solid {BORDER_COLOR}",
-                                        )
+                            rx.vstack(
+                                rx.box(
+                                    rx.table.root(
+                                        rx.table.header(
+                                            rx.table.row(
+                                                rx.table.column_header_cell(TransactionsState.translations["NAME"], color=SUBTLE_TEXT_COLOR, font_size="12px", letter_spacing="0.6px"),
+                                                rx.table.column_header_cell(TransactionsState.translations["ACCOUNT"], color=SUBTLE_TEXT_COLOR, font_size="12px", letter_spacing="0.6px"),
+                                                rx.table.column_header_cell(TransactionsState.translations["DATE"], color=SUBTLE_TEXT_COLOR, font_size="12px", letter_spacing="0.6px"),
+                                                rx.table.column_header_cell(TransactionsState.translations["AMOUNT"], color=SUBTLE_TEXT_COLOR, font_size="12px", letter_spacing="0.6px", text_align="right"),
+                                                border_bottom=f"1px solid {BORDER_COLOR}",
+                                            )
+                                        ),
+                                        rx.table.body(
+                                            rx.foreach(
+                                                TransactionsState.filtered_transactions,
+                                                transaction_row
+                                            )
+                                        ),
+                                        variant="surface",
+                                        size="2",
+                                        width="100%",
                                     ),
-                                    rx.table.body(
-                                        rx.foreach(
-                                            TransactionsState.filtered_transactions,
-                                            transaction_row
-                                        )
-                                    ),
-                                    variant="surface",
-                                    size="2",
+                                    background="#FFFFFF",
+                                    border=f"1px solid {BORDER_COLOR}",
+                                    box_shadow="0px 1px 2px rgba(0, 0, 0, 0.05)",
+                                    border_radius="12px",
+                                    padding="0",
                                     width="100%",
+                                    overflow="hidden",
                                 ),
-                                background="#FFFFFF",
-                                border=f"1px solid {BORDER_COLOR}",
-                                box_shadow="0px 1px 2px rgba(0, 0, 0, 0.05)",
-                                border_radius="12px",
-                                padding="0",
+                                rx.hstack(
+                                    rx.button(TransactionsState.translations["Previous"], on_click=TransactionsState.prev_page, disabled=TransactionsState.current_page <= 1),
+                                    rx.text(
+                                        f"{TransactionsState.translations['Page']} {TransactionsState.current_page} {TransactionsState.translations['of']} {TransactionsState.total_pages}"
+                                    ),
+                                    rx.button(TransactionsState.translations["Next"], on_click=TransactionsState.next_page, disabled=TransactionsState.current_page >= TransactionsState.total_pages),
+                                    justify="center",
+                                    align="center",
+                                    spacing="4",
+                                    margin_top="1em",
+                                ),
                                 width="100%",
-                                overflow="hidden",
-                            ),
+                            )
                         )
                     ),
                     
@@ -197,7 +211,8 @@ def transactions() -> rx.Component:
                 ),
                 padding_top="80px", # Adjust for topbar
                 margin_left=["0", "0", "288px", "288px", "288px"],
-                width=["100%", "100%", "calc(100% - 288px)", "calc(100% - 288px)", "calc(100% - 288px)"],
+                width="100%",
+                padding_x="2em",
             ),
             align_items="flex-start",
         ),

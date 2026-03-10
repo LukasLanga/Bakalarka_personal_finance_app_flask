@@ -122,11 +122,21 @@ def get_transaction(account_id: int, transaction_id: int) -> Transaction:
     response.raise_for_status()
     return Transaction(**response.json())
 
-def get_all_transactions() -> List[Transaction]:
+def get_all_transactions(page: int = 1, per_page: int = 10, search_query: Optional[str] = None, account_id: Optional[int] = None, category_id: Optional[int] = None) -> Dict[str, Any]:
     """Fetches all transactions for the current user."""
-    response = http_client.get("/getAllTransactions")
+    params = {"page": page, "per_page": per_page}
+    if search_query:
+        params["search_query"] = search_query
+    if account_id:
+        params["account_id"] = account_id
+    if category_id:
+        params["category_id"] = category_id
+
+    response = http_client.get("/getAllTransactions", params=params)
     response.raise_for_status()
-    return [Transaction(**t) for t in response.json()]
+    data = response.json()
+    data["transactions"] = [Transaction(**t) for t in data["transactions"]]
+    return data
 
 def create_account(name: str, bank_name: str, balance: float, currency: str = "EUR"):
     """Creates a new account."""

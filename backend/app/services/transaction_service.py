@@ -3,7 +3,7 @@ from backend.app.models import Transaction, UserAccountAccess, Account, Category
 from backend.app.models.user import User
 from backend.app.services.account_service import AccountService
 from backend.app.services.category_service import CategoryService
-from sqlalchemy import func, extract
+from sqlalchemy import func, extract, or_
 from datetime import datetime
 from decimal import Decimal
 
@@ -189,11 +189,26 @@ class TransactionService:
         return transaction
 
     @staticmethod
-    def get_all_transactions(user: User):
+    def get_all_transactions(user: User, page: int = 1, per_page: int = 10, search_query: str = None, account_id: int = None, category_id: int = None):
         account_ids = [acc.id for acc in AccountService.list_accounts(user)]
         if not account_ids:
             return []
-        return Transaction.query.filter(Transaction.account_id.in_(account_ids)).order_by(Transaction.date.desc()).all()
+        
+        query = Transaction.query.filter(Transaction.account_id.in_(account_ids))
+
+        if search_query:
+            query = query.filter(or_(
+                Transaction.name.ilike(f"%{search_query}%"),
+                Transaction.description.ilike(f"%{search_query}%")
+            ))
+        
+        if account_id:
+            query = query.filter(Transaction.account_id == account_id)
+
+        if category_id:
+            query = query.filter(Transaction.category_id == category_id)
+
+        return query.order_by(Transaction.date.desc()).paginate(page=page, per_page=per_page, error_out=False)
 
     @staticmethod
     def get_all_transactions_by_category(user: User, category_id):
