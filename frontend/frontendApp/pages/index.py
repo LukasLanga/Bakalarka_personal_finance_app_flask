@@ -266,6 +266,24 @@ def spending_by_category_list() -> rx.Component:
                     width="100%",
                 ),
             ),
+            rx.hstack(
+                rx.button(
+                    rx.icon(tag="chevron-left"),
+                    on_click=DashboardState.prev_month,
+                    variant="ghost",
+                ),
+                rx.spacer(),
+                rx.text(DashboardState.selected_month_str, weight="bold"),
+                rx.spacer(),
+                rx.button(
+                    rx.icon(tag="chevron-right"),
+                    on_click=DashboardState.next_month,
+                    variant="ghost",
+                ),
+                width="100%",
+                align="center",
+                padding_top="1em",
+            ),
             spacing="4",
             width="100%",
         ),
@@ -302,16 +320,16 @@ def dashboard_content() -> rx.Component:
             gap="4",
             width="100%",
         ),
-        # Yearly Overview
-        yearly_overview_card(),
-        # Charts and Recent Transactions
+        # Yearly Overview and Spending by Category
         rx.grid(
-            recent_transactions_table(),
+            yearly_overview_card(),
             spending_by_category_list(),
-            columns={"base": "1", "md": "2fr 1fr"},
+            columns={"base": "1", "lg": "2fr 1fr"},
             gap="4",
             width="100%",
         ),
+        # Recent Transactions
+        recent_transactions_table(),
         spacing="5",
         width="100%",
     )

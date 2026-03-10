@@ -19,8 +19,20 @@ def get_dashboard_summary():
     except (ValueError, TypeError):
         account_id = None
 
+    now = datetime.now()
+    try:
+        year = int(request.args.get('year', now.year))
+    except (ValueError, TypeError):
+        year = now.year
+    try:
+        month = int(request.args.get('month', now.month))
+    except (ValueError, TypeError):
+        month = now.month
+
     summary_data = TransactionService.get_dashboard_summary(
         user=current_user,
+        year=year,
+        month=month,
         recent_transaction_limit=limit,
         account_id=account_id
     )

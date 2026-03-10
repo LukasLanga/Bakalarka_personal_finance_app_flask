@@ -46,7 +46,7 @@ class TransactionService:
         ).all()
 
     @staticmethod
-    def get_dashboard_summary(user: User, recent_transaction_limit: int = 5, account_id: int = None):
+    def get_dashboard_summary(user: User, year: int, month: int, recent_transaction_limit: int = 5, account_id: int = None):
         if account_id:
             access = UserAccountAccess.query.filter_by(user_id=user.id, account_id=account_id).first()
             if not access:
@@ -72,13 +72,10 @@ class TransactionService:
             account_ids = [acc.id for acc in user_accounts]
             total_balance = AccountService.get_total_balance(user)
 
-        current_month = datetime.now().month
-        current_year = datetime.now().year
-
         monthly_transactions_query = db.session.query(Transaction).filter(
             Transaction.account_id.in_(account_ids),
-            extract('month', Transaction.date) == current_month,
-            extract('year', Transaction.date) == current_year
+            extract('month', Transaction.date) == month,
+            extract('year', Transaction.date) == year
         )
 
         monthly_income = monthly_transactions_query.filter(Transaction.amount > 0).with_entities(func.sum(Transaction.amount)).scalar() or 0
@@ -92,6 +89,8 @@ class TransactionService:
         ).join(Transaction, Transaction.category_id == Category.id).filter(
             Transaction.account_id.in_(account_ids),
             Transaction.amount < 0,
+            extract('month', Transaction.date) == month,
+            extract('year', Transaction.date) == year
         ).group_by(Category.name).order_by(func.sum(Transaction.amount).asc()).all()
 
         return {

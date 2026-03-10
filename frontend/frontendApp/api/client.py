@@ -50,11 +50,15 @@ def list_categories() -> List[Category]:
     return [Category(**cat) for cat in response.json()]
 
 
-def get_dashboard_summary(account_id: Optional[int] = None) -> DashboardSummary:
+def get_dashboard_summary(account_id: Optional[int] = None, year: Optional[int] = None, month: Optional[int] = None) -> DashboardSummary:
     """Fetches the dashboard summary data."""
     params = {}
     if account_id:
         params["account_id"] = account_id
+    if year:
+        params["year"] = year
+    if month:
+        params["month"] = month
     response = http_client.get("/dashboardSummary", params=params)
     response.raise_for_status()
     return DashboardSummary(**response.json())

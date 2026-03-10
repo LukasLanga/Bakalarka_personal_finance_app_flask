@@ -4,6 +4,7 @@ from ..models.models import Account, Category, DashboardSummary, Invitation
 from .base_state import BaseState
 from ..api import client
 import httpx
+from datetime import datetime
 
 PIE_CHART_COLORS = ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF", "#FF9F40"]
 
@@ -24,6 +25,31 @@ class DashboardState(BaseState):
     is_sidebar_collapsed: bool = True
     error_message: str = ""
     selected_account_id: int | None = None
+    selected_year: int = datetime.now().year
+    selected_month: int = datetime.now().month
+
+    @rx.var
+    def selected_month_str(self) -> str:
+        """Returns the selected month and year as a formatted string."""
+        return f"{self.selected_month:02d}.{self.selected_year}"
+
+    async def next_month(self):
+        """Moves to the next month."""
+        if self.selected_month == 12:
+            self.selected_month = 1
+            self.selected_year += 1
+        else:
+            self.selected_month += 1
+        await self.load_dashboard_summary()
+
+    async def prev_month(self):
+        """Moves to the previous month."""
+        if self.selected_month == 1:
+            self.selected_month = 12
+            self.selected_year -= 1
+        else:
+            self.selected_month -= 1
+        await self.load_dashboard_summary()
 
     @rx.var
     def pending_invitations_count(self) -> int:
@@ -168,7 +194,11 @@ class DashboardState(BaseState):
 
     async def load_dashboard_summary(self):
         try:
-            self.dashboard_summary = client.get_dashboard_summary(account_id=self.selected_account_id)
+            self.dashboard_summary = client.get_dashboard_summary(
+                account_id=self.selected_account_id,
+                year=self.selected_year,
+                month=self.selected_month,
+            )
         except Exception as e:
             print(f"Error loading dashboard summary: {e}")
 
