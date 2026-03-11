@@ -182,8 +182,6 @@ def account_management_list() -> rx.Component:
     """The list of accounts to manage."""
     return rx.vstack(
         rx.hstack(
-            rx.heading(DashboardState.translations["Manage Accounts"], size="6"),
-            rx.spacer(),
             rx.button(DashboardState.translations["New Account"], on_click=DashboardState.toggle_account_modal, size="2"),
             width="100%",
             justify="between",

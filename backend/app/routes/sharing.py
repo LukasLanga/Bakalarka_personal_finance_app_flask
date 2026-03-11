@@ -41,7 +41,7 @@ def invite_user(account_id):
         return jsonify({"message": "You cannot invite yourself to an account."}), 400
 
     token = secrets.token_urlsafe(32)
-    expires_at = datetime.now(datetime.UTC) + timedelta(days=7)
+    expires_at = datetime.now() + timedelta(days=7)
 
     query = text("""
         INSERT INTO account_invitations (account_id, invited_by_user_id, invited_email, role, token, expires_at)
