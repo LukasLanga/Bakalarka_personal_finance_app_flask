@@ -158,11 +158,16 @@ def transaction_detail() -> rx.Component:
                                                         variant="surface",
                                                     ),
                                                     rx.text(TransactionDetailState.translations["Category"], size="1", margin_bottom="-8px", color=rx.color("gray", 11)),
-                                                    rx.select(
-                                                        DashboardState.category_names,
+                                                    rx.select.root(
+                                                        rx.select.trigger(placeholder=TransactionDetailState.translations["Select Category"]),
+                                                        rx.select.content(
+                                                            rx.foreach(
+                                                                DashboardState.category_options, # Using category_options
+                                                                lambda option: rx.select.item(option["label"], value=option["value"])
+                                                            )
+                                                        ),
                                                         value=TransactionDetailState.edit_category_name,
                                                         on_change=TransactionDetailState.set_edit_category_name,
-                                                        placeholder=TransactionDetailState.translations["Select Category"],
                                                         width="100%",
                                                         color_scheme="gray",
                                                         variant="surface",

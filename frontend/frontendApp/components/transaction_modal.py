@@ -53,12 +53,23 @@ def transaction_modal() -> rx.Component:
                         width="100%",
                     ),
                     rx.text(DashboardState.translations["Account"], size="1", margin_bottom="-8px", color_scheme="gray"),
-                    rx.select(
-                        DashboardState.account_names,
-                        placeholder=DashboardState.translations["Select Account"],
-                        value=TransactionFormState.account_name,
-                        on_change=TransactionFormState.set_account_name,
-                        width="100%",
+                    rx.select.root(
+                        rx.select.trigger(
+                            placeholder=DashboardState.translations["Select Account"],
+                            size="2",
+                            variant="surface",
+                            class_name="rt-reset",
+                            width="100%"
+                        ),
+                        rx.select.content(
+                            rx.foreach(
+                                DashboardState.account_options,
+                                lambda option: rx.select.item(option["label"], value=option["value"])
+                            )
+                        ),
+                        value=TransactionFormState.form_account_id,
+                        on_change=TransactionFormState.set_form_account_id,
+                        width="100%"
                     ),
                     rx.text(DashboardState.translations["Category"], size="1", margin_bottom="-8px", color_scheme="gray"),
                     rx.select(

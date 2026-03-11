@@ -7,7 +7,7 @@ from ..api import client
 
 class TransactionFormState(BaseState):
     """State for the transaction form."""
-    account_name: str = ""
+    form_account_id: str = ""
     category_name: str = ""
     name: str = ""
     amount: float = 0.0
@@ -18,7 +18,7 @@ class TransactionFormState(BaseState):
     currency: str = "EUR"
 
     def reset_form(self):
-        self.account_name = ""
+        self.form_account_id = ""
         self.category_name = ""
         self.name = ""
         self.amount = 0.0
@@ -43,13 +43,13 @@ class TransactionFormState(BaseState):
     def set_description(self, value: str):
         self.description = value
 
-    async def set_account_name(self, value: str):
+    async def set_form_account_id(self, value: str):
         from .dashboard_state import DashboardState
-        self.account_name = value
+        self.form_account_id = value
         dashboard_state = await self.get_state(DashboardState)
         for acc in dashboard_state.accounts:
-            name = acc.get("name") if isinstance(acc, dict) else acc.name
-            if name == value:
+            acc_id = acc.get("id") if isinstance(acc, dict) else acc.id
+            if str(acc_id) == value: # Compare string with string
                 self.currency = acc.get("currency") if isinstance(acc, dict) else acc.currency
                 break
 
@@ -70,9 +70,15 @@ class TransactionFormState(BaseState):
             def get_currency(item):
                 return item.get("currency") if isinstance(item, dict) else item.currency
 
-            selected_account = next((acc for acc in accounts if get_name(acc) == self.account_name), None)
-            if not selected_account:
+            if not self.form_account_id:
                 self.error_message = "Please select a valid account."
+                self.is_loading = False
+                return
+
+            selected_account_id_int = int(self.form_account_id)
+            selected_account = next((acc for acc in accounts if get_id(acc) == selected_account_id_int), None)
+            if not selected_account:
+                self.error_message = "Invalid account selected."
                 self.is_loading = False
                 return
 
@@ -83,7 +89,7 @@ class TransactionFormState(BaseState):
                 return
 
             client.create_transaction(
-                account_id=get_id(selected_account),
+                account_id=selected_account_id_int,
                 category_id=get_id(selected_category),
                 name=self.name,
                 amount=self.amount,
