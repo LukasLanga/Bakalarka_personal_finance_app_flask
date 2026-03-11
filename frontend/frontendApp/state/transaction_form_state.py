@@ -35,7 +35,7 @@ class TransactionFormState(BaseState):
         try:
             self.amount = float(value) if value else 0.0
         except ValueError:
-            self.error_message = "Invalid amount. Please enter a number."
+            self.error_message = self.translations["Invalid amount. Please enter a number."]
 
     def set_date(self, value: str):
         self.date = value
@@ -71,20 +71,20 @@ class TransactionFormState(BaseState):
                 return item.get("currency") if isinstance(item, dict) else item.currency
 
             if not self.form_account_id:
-                self.error_message = "Please select a valid account."
+                self.error_message = self.translations["Please select a valid account."]
                 self.is_loading = False
                 return
 
             selected_account_id_int = int(self.form_account_id)
             selected_account = next((acc for acc in accounts if get_id(acc) == selected_account_id_int), None)
             if not selected_account:
-                self.error_message = "Invalid account selected."
+                self.error_message = self.translations["Invalid account selected."]
                 self.is_loading = False
                 return
 
             selected_category = next((cat for cat in categories if get_name(cat) == self.category_name), None)
             if not selected_category:
-                self.error_message = "Please select a valid category."
+                self.error_message = self.translations["Please select a valid category."]
                 self.is_loading = False
                 return
 
