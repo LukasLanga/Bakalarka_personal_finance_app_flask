@@ -70,6 +70,11 @@ class TransactionFormState(BaseState):
             def get_currency(item):
                 return item.get("currency") if isinstance(item, dict) else item.currency
 
+            if not self.name.strip():
+                self.error_message = self.translations["Transaction name cannot be empty."]
+                self.is_loading = False
+                return
+
             if not self.form_account_id:
                 self.error_message = self.translations["Please select a valid account."]
                 self.is_loading = False

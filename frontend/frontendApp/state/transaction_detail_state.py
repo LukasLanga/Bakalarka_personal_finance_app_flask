@@ -1,5 +1,4 @@
 import reflex as rx
-from typing import Optional
 from datetime import datetime
 from ..models.models import Transaction
 from .base_state import BaseState
@@ -30,7 +29,7 @@ class TransactionDetailState(BaseState):
         try:
             self.edit_amount = float(value) if value else 0.0
         except ValueError:
-            pass
+            self.error_message = self.translations["Invalid amount. Please enter a number."]
 
     def set_edit_date(self, value: str):
         self.edit_date = value
@@ -115,7 +114,25 @@ class TransactionDetailState(BaseState):
 
     async def save_changes(self):
         self.is_loading = True
+        self.error_message = ""
+
         try:
+            # Validation checks
+            if not self.edit_name.strip():
+                self.error_message = self.translations["Transaction name cannot be empty."]
+                self.is_loading = False
+                return
+
+            if self.edit_amount == 0.0:
+                self.error_message = self.translations["Transaction amount cannot be zero."]
+                self.is_loading = False
+                return
+
+            if not self.edit_category_name:
+                self.error_message = self.translations["Please select a valid category."]
+                self.is_loading = False
+                return
+
             categories = client.list_categories()
             selected_category = next((cat for cat in categories if cat.name == self.edit_category_name), None)
             category_id = selected_category.id if selected_category else None
@@ -143,7 +160,7 @@ class TransactionDetailState(BaseState):
 
     async def delete_transaction(self):
         if not self.transaction:
-            return
+            return None
 
         self.is_loading = True
         try:
