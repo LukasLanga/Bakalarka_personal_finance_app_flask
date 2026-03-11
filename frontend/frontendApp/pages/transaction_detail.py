@@ -1,15 +1,11 @@
 import reflex as rx
-from ..state import BaseState, DashboardState, TransactionDetailState
-from ..api import client
-from ..models.models import Transaction
+from ..state import DashboardState, TransactionDetailState
 from ..components.sidebar import sidebar
 from ..components.topbar import topbar
 from ..components.transaction_modal import transaction_modal
 from ..components.account_modal import account_modal
 from ..components.manage_accounts_modal import manage_accounts_modal
 from ..styles import TEXT_COLOR, SUBTLE_TEXT_COLOR, PRIMARY_COLOR, BORDER_COLOR
-from typing import Optional
-from datetime import datetime
 
 @rx.page(route="/transaction/[account_id]/[transaction_id]", on_load=TransactionDetailState.get_transaction_detail)
 def transaction_detail() -> rx.Component:

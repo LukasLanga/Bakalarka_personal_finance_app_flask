@@ -24,7 +24,7 @@ class BaseState(rx.State):
             self.is_authenticated = True
         except (httpx.HTTPStatusError, Exception):
             self.is_authenticated = False
-            current_path = self.router.page.raw_path
+            current_path = self.router.url.path
             if current_path not in public_routes:
                 yield rx.redirect("/login")
 
