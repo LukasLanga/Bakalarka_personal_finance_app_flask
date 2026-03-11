@@ -14,14 +14,23 @@ def get_role_description(role: str) -> str:
 def invitation_detail_row(title: str, value: str) -> rx.Component:
     """A single row for displaying invitation details."""
     return rx.flex(
-        rx.text(DashboardState.translations[title], color_scheme="gray", size="2", weight="medium"),
-        rx.text(value, size="2", weight="bold"),
+        rx.text(
+            DashboardState.translations[title],
+            color_scheme="gray",
+            size="2",
+            weight="medium",
+        ),
+        rx.text(
+            value,
+            size="2",
+            weight="bold",
+            as_="span",
+        ),
         justify="between",
         width="100%",
         padding_y="10px",
         border_bottom="1px solid #F1F5F9",
     )
-
 def invitation_modal() -> rx.Component:
     """A modal to display invitation details and actions."""
     return rx.dialog.root(
