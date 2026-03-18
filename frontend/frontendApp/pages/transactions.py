@@ -1,78 +1,12 @@
 import reflex as rx
-from ..state import BaseState, DashboardState, TransactionsState
-from ..api import client
-from ..models.models import Transaction, Account, Category
+from ..state import BaseState, TransactionsState
 from ..components.sidebar import sidebar
 from ..components.topbar import topbar
 from ..components.transaction_modal import transaction_modal
 from ..components.account_modal import account_modal
 from ..components.manage_accounts_modal import manage_accounts_modal
 from ..components.invitation_modal import invitation_modal
-
-def transaction_row(transaction: Transaction) -> rx.Component:
-    """A single row for the transactions table."""
-    detail_url = f"/transaction/{transaction.account_id}/{transaction.id}"
-
-    return rx.table.row(
-        rx.table.row_header_cell(
-            rx.link(
-                rx.text(transaction.name, weight="bold", size="2"),
-                href=detail_url,
-                underline="none",
-                color="inherit",
-                width="100%",
-                display="block",
-                padding_y="16px",
-            )
-        ),
-        rx.table.cell(
-            rx.link(
-                rx.text(
-                    TransactionsState.account_id_to_name.get(str(transaction.account_id), "N/A"),
-                    size="2",
-                    color_scheme="gray"
-                ),
-                href=detail_url,
-                underline="none",
-                color="inherit",
-                width="100%",
-                display="block",
-                padding_y="16px",
-            ),
-            vertical_align="middle",
-        ),
-        rx.table.cell(
-            rx.link(
-                rx.badge(rx.moment(transaction.date, format="DD MMMM YYYY"), variant="soft", color_scheme="gray"),
-                href=detail_url,
-                underline="none",
-                color="inherit",
-                width="100%",
-                display="block",
-                padding_y="16px",
-            ),
-            vertical_align="middle",
-        ),
-        rx.table.cell(
-            rx.link(
-                rx.text(
-                    f"{transaction.amount:,.2f} {transaction.currency}",
-                    weight="bold",
-                    color=rx.cond(transaction.amount < 0, "var(--red-9)", "var(--green-9)"),
-                    align="right",
-                ),
-                href=detail_url,
-                underline="none",
-                color="inherit",
-                width="100%",
-                display="block",
-                padding_y="16px",
-            ),
-            vertical_align="middle",
-        ),
-        _hover={"background_color": "var(--gray-a3)"},
-        border_bottom="1px solid var(--gray-a5)",
-    )
+from ..components.transaction_row import transaction_row
 
 @rx.page(route="/transactions", on_load=[BaseState.check_auth, TransactionsState.load_data], title="Personal Finance App")
 def transactions() -> rx.Component:
@@ -169,7 +103,7 @@ def transactions() -> rx.Component:
                                     ),
                                     rx.table.body(
                                         rx.foreach(
-                                            TransactionsState.filtered_transactions,
+                                            TransactionsState.enriched_transactions,
                                             transaction_row
                                         )
                                     ),

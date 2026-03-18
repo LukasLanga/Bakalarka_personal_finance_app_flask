@@ -29,6 +29,10 @@ class Transaction(BaseModel):
     account_id: int
     currency: str = "EUR"
 
+class EnrichedTransaction(Transaction):
+    """A transaction with the account name included."""
+    account_name: str
+
 class SpendingByCategory(BaseModel):
     category_name: str
     amount: float

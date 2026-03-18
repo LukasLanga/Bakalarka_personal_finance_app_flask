@@ -1,6 +1,6 @@
 import reflex as rx
 from typing import List, Dict, Any, Optional
-from ..models.models import Account, Category, DashboardSummary, Invitation
+from ..models.models import Account, Category, DashboardSummary, Invitation, EnrichedTransaction
 from .base_state import BaseState
 from ..api import client
 import httpx
@@ -40,7 +40,8 @@ class DashboardState(BaseState):
             self.selected_year += 1
         else:
             self.selected_month += 1
-        await self.load_dashboard_summary()
+        self.load_dashboard_summary()
+        yield
 
     async def prev_month(self):
         """Moves to the previous month."""
@@ -49,7 +50,8 @@ class DashboardState(BaseState):
             self.selected_year -= 1
         else:
             self.selected_month -= 1
-        await self.load_dashboard_summary()
+        self.load_dashboard_summary()
+        yield
 
     @rx.var
     def pending_invitations_count(self) -> int:
@@ -99,6 +101,29 @@ class DashboardState(BaseState):
         return {str(acc.id): acc.name for acc in self.accounts}
 
     @rx.var
+    def enriched_recent_transactions(self) -> List[EnrichedTransaction]:
+        """Combines recent transactions with their account names."""
+        if not self.dashboard_summary:
+            return []
+        enriched = []
+        for t in self.dashboard_summary.recent_transactions:
+            account_name = self.account_id_to_name.get(str(t.account_id), "N/A")
+            enriched.append(
+                EnrichedTransaction(
+                    id=t.id,
+                    name=t.name,
+                    amount=t.amount,
+                    date=t.date,
+                    description=t.description,
+                    category_id=t.category_id,
+                    account_id=t.account_id,
+                    currency=t.currency,
+                    account_name=account_name,
+                )
+            )
+        return enriched
+
+    @rx.var
     def selected_account_currency(self) -> str:
         if self.selected_account_id:
             for acc in self.accounts:
@@ -115,17 +140,31 @@ class DashboardState(BaseState):
         
         async for event in self.check_auth():
             yield event
-        if self.is_authenticated:
+        if not self.is_authenticated:
+            return
+
+        self.is_loading = True
+        yield
+
+        try:
             async for event in self.load_accounts():
                 yield event
             
+            if not self.is_authenticated:
+                return
+
             if self.selected_account_id is None and self.accounts:
                 self.selected_account_id = self.accounts[0].id
-            
-            await self.load_user_roles()
-            await self.load_dashboard_summary()
-            await self.load_yearly_overview()
-            await self.load_pending_invitations()
+
+            self.load_user_roles()
+            self.load_dashboard_summary()
+            self.load_yearly_overview()
+            self.load_pending_invitations()
+        except Exception as e:
+            self.error_message = f"Error loading dashboard data: {e}"
+        finally:
+            self.is_loading = False
+            yield
 
     def toggle_sidebar(self):
         self.is_sidebar_collapsed = not self.is_sidebar_collapsed
@@ -167,12 +206,11 @@ class DashboardState(BaseState):
 
     async def select_account(self, account_id: int):
         self.selected_account_id = account_id
-        await self.load_dashboard_summary()
-        await self.load_yearly_overview()
+        self.load_dashboard_summary()
+        self.load_yearly_overview()
+        yield
 
     async def load_accounts(self):
-        self.is_loading = True
-        self.error_message = ""
         try:
             self.accounts = client.get_accounts()
         except httpx.HTTPStatusError as e:
@@ -183,10 +221,8 @@ class DashboardState(BaseState):
                 self.error_message = f"Error loading accounts: {e}"
         except Exception as e:
             self.error_message = f"Error loading accounts: {e}"
-        finally:
-            self.is_loading = False
 
-    async def load_user_roles(self):
+    def load_user_roles(self):
         try:
             self.user_roles = client.get_user_roles()
         except Exception as e:
@@ -198,7 +234,7 @@ class DashboardState(BaseState):
         except Exception as e:
             print(f"Error loading categories: {e}")
 
-    async def load_dashboard_summary(self):
+    def load_dashboard_summary(self):
         try:
             self.dashboard_summary = client.get_dashboard_summary(
                 account_id=self.selected_account_id,
@@ -208,13 +244,13 @@ class DashboardState(BaseState):
         except Exception as e:
             print(f"Error loading dashboard summary: {e}")
 
-    async def load_yearly_overview(self):
+    def load_yearly_overview(self):
         try:
             self.yearly_overview = client.get_yearly_overview(account_id=self.selected_account_id)
         except Exception as e:
             print(f"Error loading yearly overview: {e}")
 
-    async def load_pending_invitations(self):
+    def load_pending_invitations(self):
         try:
             self.pending_invitations = client.get_pending_invitations()
         except Exception as e:
@@ -226,7 +262,7 @@ class DashboardState(BaseState):
         try:
             client.accept_invitation(self.selected_invitation.token)
             self.set_show_invitation_modal(False)
-            await self.load_pending_invitations()
+            self.load_pending_invitations()
             return self.load_accounts()
         except Exception as e:
             print(f"Error accepting invitation: {e}")
@@ -234,7 +270,8 @@ class DashboardState(BaseState):
     async def decline_invitation(self, token: str):
         try:
             client.decline_invitation(token)
-            await self.load_pending_invitations()
+            self.load_pending_invitations()
+            yield
         except Exception as e:
             print(f"Error declining invitation: {e}")
 
