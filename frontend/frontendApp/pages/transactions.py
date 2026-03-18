@@ -74,7 +74,7 @@ def transaction_row(transaction: Transaction) -> rx.Component:
         border_bottom="1px solid var(--gray-a5)",
     )
 
-@rx.page(route="/transactions", on_load=[BaseState.check_auth, TransactionsState.load_data])
+@rx.page(route="/transactions", on_load=[BaseState.check_auth, TransactionsState.load_data], title="Personal Finance App")
 def transactions() -> rx.Component:
     return rx.box(
         topbar(),

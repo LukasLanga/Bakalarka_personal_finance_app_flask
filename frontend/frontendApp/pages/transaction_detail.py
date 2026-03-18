@@ -7,7 +7,7 @@ from ..components.account_modal import account_modal
 from ..components.manage_accounts_modal import manage_accounts_modal
 from ..styles import PRIMARY_COLOR
 
-@rx.page(route="/transaction/[account_id]/[transaction_id]", on_load=[BaseState.check_auth, TransactionDetailState.get_transaction_detail])
+@rx.page(route="/transaction/[account_id]/[transaction_id]", on_load=[BaseState.check_auth, TransactionDetailState.get_transaction_detail], title="Personal Finance App")
 def transaction_detail() -> rx.Component:
     can_edit = (TransactionDetailState.current_user_role == "editor") | (TransactionDetailState.current_user_role == "manager") | (TransactionDetailState.current_user_role == "owner")
 

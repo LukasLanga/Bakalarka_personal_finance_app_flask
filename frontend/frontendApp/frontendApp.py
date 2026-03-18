@@ -11,4 +11,7 @@ app = rx.App(
     stylesheets=[
         "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
     ],
+    head_components=[
+        rx.el.link(rel="icon", href="/favicon.svg", type="image/svg+xml"),
+    ],
 )

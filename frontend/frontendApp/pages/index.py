@@ -301,7 +301,7 @@ def dashboard_content() -> rx.Component:
         width="100%",
     )
 
-@rx.page(route="/", on_load=DashboardState.on_page_load, title="Dashboard")
+@rx.page(route="/", on_load=DashboardState.on_page_load, title="Personal Finance App")
 def index() -> rx.Component:
     """The main dashboard page."""
     return rx.box(

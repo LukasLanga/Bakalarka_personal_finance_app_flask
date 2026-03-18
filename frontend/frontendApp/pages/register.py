@@ -29,7 +29,7 @@ def password_input(placeholder: str, on_blur_event, show_var, toggle_event) -> r
     )
 
 
-@rx.page(route="/register", title="Register")
+@rx.page(route="/register", title="Personal Finance App")
 def register_page() -> rx.Component:
     return rx.box(
         rx.center(

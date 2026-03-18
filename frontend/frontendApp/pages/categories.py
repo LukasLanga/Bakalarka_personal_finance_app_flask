@@ -46,7 +46,7 @@ def add_category_modal() -> rx.Component:
         on_open_change=CategoriesState.toggle_add_category_modal,
     )
 
-@rx.page(route="/categories", on_load=[BaseState.check_auth, CategoriesState.load_categories])
+@rx.page(route="/categories", on_load=[BaseState.check_auth, CategoriesState.load_categories], title="Personal Finance App")
 def categories() -> rx.Component:
     return rx.box(
         topbar(),

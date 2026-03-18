@@ -29,7 +29,7 @@ def password_input() -> rx.Component:
     )
 
 
-@rx.page(route="/login", title="Login")
+@rx.page(route="/login", title="Personal Finance App")
 def login_page() -> rx.Component:
     return rx.box(
         rx.center(
