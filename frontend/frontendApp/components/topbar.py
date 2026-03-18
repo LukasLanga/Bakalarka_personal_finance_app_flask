@@ -1,7 +1,30 @@
 import reflex as rx
+from reflex.style import set_color_mode, color_mode
 from ..state import DashboardState
 from ..models.models import Invitation
 from .language_switcher import language_switcher
+
+
+def dark_mode_toggle() -> rx.Component:
+    return rx.segmented_control.root(
+        rx.segmented_control.item(
+            rx.icon(tag="monitor", size=20),
+            value="system",
+        ),
+        rx.segmented_control.item(
+            rx.icon(tag="sun", size=20),
+            value="light",
+        ),
+        rx.segmented_control.item(
+            rx.icon(tag="moon", size=20),
+            value="dark",
+        ),
+        on_change=set_color_mode,
+        variant="classic",
+        radius="large",
+        value=color_mode,
+    )
+
 
 def invitation_item(invitation: Invitation) -> rx.Component:
     """A single item in the notification popover."""
@@ -93,6 +116,7 @@ def topbar() -> rx.Component:
                     size="3",
                 ),
             ),
+            dark_mode_toggle(), # Added dark mode toggle here
             language_switcher(),
             rx.button(
                 rx.icon("log-out", size=16),
