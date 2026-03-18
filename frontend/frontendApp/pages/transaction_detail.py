@@ -1,5 +1,5 @@
 import reflex as rx
-from ..state import DashboardState, TransactionDetailState
+from ..state import BaseState, DashboardState, TransactionDetailState
 from ..components.sidebar import sidebar
 from ..components.topbar import topbar
 from ..components.transaction_modal import transaction_modal
@@ -7,7 +7,7 @@ from ..components.account_modal import account_modal
 from ..components.manage_accounts_modal import manage_accounts_modal
 from ..styles import PRIMARY_COLOR
 
-@rx.page(route="/transaction/[account_id]/[transaction_id]", on_load=TransactionDetailState.get_transaction_detail)
+@rx.page(route="/transaction/[account_id]/[transaction_id]", on_load=[BaseState.check_auth, TransactionDetailState.get_transaction_detail])
 def transaction_detail() -> rx.Component:
     can_edit = (TransactionDetailState.current_user_role == "editor") | (TransactionDetailState.current_user_role == "manager") | (TransactionDetailState.current_user_role == "owner")
 
