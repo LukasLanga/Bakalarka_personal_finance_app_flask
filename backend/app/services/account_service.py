@@ -1,6 +1,7 @@
 from backend.app.db import db
 from backend.app.models import User, Account, UserAccountAccess
 from sqlalchemy import func
+from sqlalchemy.orm import aliased
 
 class AccountService:
 
@@ -28,7 +29,7 @@ class AccountService:
     @staticmethod
     def update_account(user: User, account_id: int, name: str = None, bank_name: str = None, currency: str = None) -> Account:
         access = UserAccountAccess.query.filter_by(user_id=user.id, account_id=account_id).first()
-        if not access or access.role != 'owner':
+        if not access or access.role not in ['owner', 'manager']:
             raise PermissionError("No permission to update this account")
 
         account = Account.query.get(account_id)
@@ -123,10 +124,16 @@ class AccountService:
 
     @staticmethod
     def list_accounts(user: User):
-        accounts = Account.query.join(
-            UserAccountAccess).filter(
-            UserAccountAccess.user_id == user.id
-        ).all()
+        """
+        Lists all accounts a user has access to, including their own
+        and those shared with them.
+        """
+        user_access = aliased(UserAccountAccess)
+
+        accessible_account_ids = db.session.query(user_access.account_id).filter(user_access.user_id == user.id)
+
+        accounts = Account.query.filter(Account.id.in_(accessible_account_ids)).all()
+
         return accounts
 
     @staticmethod
