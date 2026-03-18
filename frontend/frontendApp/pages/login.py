@@ -1,7 +1,29 @@
 import reflex as rx
+from reflex.style import set_color_mode, color_mode
 from ..state import LoginState
 from ..styles import card_style, input_style, button_style, label_style, PRIMARY_COLOR
 from ..components.language_switcher import language_switcher
+
+
+def dark_mode_toggle() -> rx.Component:
+    return rx.segmented_control.root(
+        rx.segmented_control.item(
+            rx.icon(tag="monitor", size=20),
+            value="system",
+        ),
+        rx.segmented_control.item(
+            rx.icon(tag="sun", size=20),
+            value="light",
+        ),
+        rx.segmented_control.item(
+            rx.icon(tag="moon", size=20),
+            value="dark",
+        ),
+        on_change=set_color_mode,
+        variant="classic",
+        radius="large",
+        value=color_mode,
+    )
 
 
 def password_input() -> rx.Component:
@@ -102,7 +124,11 @@ def login_page() -> rx.Component:
             min_height="100vh",
         ),
         rx.box(
-            language_switcher(),
+            rx.hstack(
+                dark_mode_toggle(),
+                language_switcher(),
+                spacing="2",
+            ),
             position="absolute",
             top="1em",
             right="1em",
