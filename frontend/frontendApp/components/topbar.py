@@ -40,14 +40,20 @@ def invitation_item(invitation: Invitation) -> rx.Component:
         ),
         width="100%",
         padding="12px",
-        border_bottom="1px solid #F0F4F2",
+        border_bottom="1px solid var(--gray-a5)",
     )
 
 def topbar() -> rx.Component:
     """A top bar with logout, language, and notification options."""
     return rx.box(
         rx.hstack(
-            rx.heading("MyFinance", size="7", weight="bold"),
+            rx.icon(
+                "menu",
+                size=28,
+                on_click=DashboardState.toggle_sidebar,
+                display=["block", "block", "none", "none", "none"],
+                cursor="pointer",
+            ),
             rx.spacer(),
             rx.popover.root(
                 rx.popover.trigger(
@@ -66,7 +72,7 @@ def topbar() -> rx.Component:
                                 position="absolute",
                                 top="6px",
                                 right="6px",
-                                border="2px solid white",
+                                border="2px solid var(--gray-1)",
                             ),
                         ),
                         position="relative",
@@ -97,9 +103,7 @@ def topbar() -> rx.Component:
             spacing="4",
             align="center",
         ),
-        padding="16px 40px",
-        border_bottom="1px solid #E2E8F0",
-        background_color="#FFFFFF",
+        padding="16px 24px",
         position="fixed",
         top="0",
         left="0",

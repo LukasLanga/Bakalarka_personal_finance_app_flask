@@ -6,7 +6,7 @@ from ..components.transaction_modal import transaction_modal
 from ..components.account_modal import account_modal
 from ..components.manage_accounts_modal import manage_accounts_modal
 from ..components.invitation_modal import invitation_modal
-from ..styles import TEXT_COLOR, SUBTLE_TEXT_COLOR, BORDER_COLOR
+from ..styles import PRIMARY_COLOR
 
 def add_category_modal() -> rx.Component:
     """A modal to add a new category."""
@@ -58,7 +58,7 @@ def categories() -> rx.Component:
                     rx.hstack(
                         rx.vstack(
                             rx.heading(CategoriesState.translations["Categories"], size="8"),
-                            rx.text(CategoriesState.translations["Manage your expense and income categories."], color=SUBTLE_TEXT_COLOR),
+                            rx.text(CategoriesState.translations["Manage your expense and income categories."], color_scheme="gray"),
                             align="start",
                             spacing="1",
                         ),
@@ -84,43 +84,41 @@ def categories() -> rx.Component:
                     ),
 
                     # Categories Table
-                    rx.box(
-                        rx.table.root(
-                            rx.table.header(
-                                rx.table.row(
-                                    rx.table.column_header_cell(CategoriesState.translations["Name"]),
-                                    rx.table.column_header_cell(CategoriesState.translations["Type"]),
-                                    rx.table.column_header_cell(CategoriesState.translations["Usage Count"]),
-                                    rx.table.column_header_cell(CategoriesState.translations["Actions"], text_align="right"),
-                                )
-                            ),
-                            rx.table.body(
-                                rx.foreach(
-                                    CategoriesState.filtered_categories,
-                                    lambda cat: rx.table.row(
-                                        rx.table.cell(cat.name),
-                                        rx.table.cell(rx.badge(cat.type.capitalize(), color_scheme=rx.cond(cat.type == "income", "blue", "red"))),
-                                        rx.table.cell(cat.usage_count),
-                                        rx.table.cell(
-                                            rx.button(
-                                                rx.icon("trash-2", size=16),
-                                                on_click=CategoriesState.open_delete_confirmation(cat.name),
-                                                size="1",
-                                                color_scheme="red",
-                                                variant="soft",
-                                            ),
-                                            text_align="right",
-                                        ),
-                                    )
-                                )
-                            ),
-                            variant="surface",
-                            size="2",
+                    rx.table.root(
+                        rx.table.header(
+                            rx.table.row(
+                                rx.table.column_header_cell(CategoriesState.translations["Name"]),
+                                rx.table.column_header_cell(CategoriesState.translations["Type"]),
+                                rx.table.column_header_cell(CategoriesState.translations["Usage Count"]),
+                                rx.table.column_header_cell(CategoriesState.translations["Actions"], text_align="right"),
+                            )
                         ),
+                        rx.table.body(
+                            rx.foreach(
+                                CategoriesState.filtered_categories,
+                                lambda cat: rx.table.row(
+                                    rx.table.cell(cat.name),
+                                    rx.table.cell(rx.badge(cat.type.capitalize(), color_scheme=rx.cond(cat.type == "income", "blue", "red"))),
+                                    rx.table.cell(cat.usage_count),
+                                    rx.table.cell(
+                                        rx.button(
+                                            rx.icon("trash-2", size=16),
+                                            on_click=CategoriesState.open_delete_confirmation(cat.name),
+                                            size="1",
+                                            color_scheme="red",
+                                            variant="soft",
+                                        ),
+                                        text_align="right",
+                                    ),
+                                )
+                            )
+                        ),
+                        variant="surface",
+                        size="2",
                         width="100%",
-                        border=f"1px solid {BORDER_COLOR}",
-                        border_radius="12px",
-                        overflow="hidden",
+                        background_color="var(--gray-a2)",
+                        padding="1rem",
+                        border_radius="var(--radius-3)",
                     ),
 
                     spacing="5",
@@ -159,6 +157,5 @@ def categories() -> rx.Component:
             ),
             open=CategoriesState.show_delete_confirmation,
         ),
-        background_color="#F6F8F6",
         min_height="100vh",
     )

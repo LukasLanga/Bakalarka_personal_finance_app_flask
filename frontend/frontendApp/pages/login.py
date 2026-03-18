@@ -1,6 +1,6 @@
 import reflex as rx
 from ..state import LoginState
-from ..styles import base_style, card_style, input_style, button_style, label_style, PRIMARY_COLOR, SUBTLE_TEXT_COLOR, BACKGROUND_COLOR, BORDER_COLOR
+from ..styles import card_style, input_style, button_style, label_style, PRIMARY_COLOR
 
 def password_input() -> rx.Component:
     return rx.box(
@@ -16,7 +16,6 @@ def password_input() -> rx.Component:
                 tag=rx.cond(LoginState.show_password, "eye_off", "eye"),
                 on_click=LoginState.toggle_show_password,
                 cursor="pointer",
-                color=SUBTLE_TEXT_COLOR,
             ),
             position="absolute",
             right="1em",
@@ -34,7 +33,7 @@ def login_page() -> rx.Component:
             # Header Section
             rx.vstack(
                 rx.heading(LoginState.translations["Log In"], size="7", font_weight="700"),
-                rx.text(LoginState.translations["Welcome back! Please enter your details."], color=SUBTLE_TEXT_COLOR),
+                rx.text(LoginState.translations["Welcome back! Please enter your details."]),
                 align="center",
                 padding="32px 32px 8px",
                 width="100%",
@@ -64,7 +63,7 @@ def login_page() -> rx.Component:
                 rx.button(
                     rx.cond(
                         LoginState.is_loading,
-                        rx.spinner(color="black"),
+                        rx.spinner(),
                         LoginState.translations["Log In"],
                     ),
                     on_click=LoginState.handle_login,
@@ -84,18 +83,14 @@ def login_page() -> rx.Component:
                 rx.text(
                     LoginState.translations["Don't have an account? "],
                     rx.link(LoginState.translations["Sign up"], href="/register", color=PRIMARY_COLOR, font_weight="500"),
-                    color="#475569",
                 ),
-                background_color="#F8FAFC",
-                border_top=f"1px solid {BORDER_COLOR}",
+                border_top=f"1px solid var(--gray-a5)",
                 padding="16px",
                 width="100%",
             ),
             style=card_style,
             spacing="0",
         ),
-        background=BACKGROUND_COLOR,
         width="100%",
         min_height="100vh",
-        style=base_style,
     )

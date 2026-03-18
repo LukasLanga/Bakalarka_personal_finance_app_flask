@@ -8,16 +8,15 @@ from ..components.transaction_modal import transaction_modal
 from ..components.account_modal import account_modal
 from ..components.manage_accounts_modal import manage_accounts_modal
 from ..components.invitation_modal import invitation_modal
-from ..styles import TEXT_COLOR, SUBTLE_TEXT_COLOR, BORDER_COLOR
 
 def transaction_row(transaction: Transaction) -> rx.Component:
     """A single row for the transactions table."""
-    detail_url = "/transaction/" + transaction.account_id.to_string() + "/" + transaction.id.to_string()
+    detail_url = f"/transaction/{transaction.account_id}/{transaction.id}"
 
     return rx.table.row(
         rx.table.row_header_cell(
             rx.link(
-                rx.text(transaction.name, weight="bold", color=TEXT_COLOR, size="2"),
+                rx.text(transaction.name, weight="bold", size="2"),
                 href=detail_url,
                 underline="none",
                 color="inherit",
@@ -29,9 +28,9 @@ def transaction_row(transaction: Transaction) -> rx.Component:
         rx.table.cell(
             rx.link(
                 rx.text(
-                    TransactionsState.account_id_to_name[transaction.account_id.to_string()],
+                    TransactionsState.account_id_to_name.get(str(transaction.account_id), "N/A"),
                     size="2",
-                    color=SUBTLE_TEXT_COLOR
+                    color_scheme="gray"
                 ),
                 href=detail_url,
                 underline="none",
@@ -44,13 +43,7 @@ def transaction_row(transaction: Transaction) -> rx.Component:
         ),
         rx.table.cell(
             rx.link(
-                rx.box(
-                    rx.text(rx.moment(transaction.date, format="DD MMMM YYYY"), size="2", weight="medium", color=SUBTLE_TEXT_COLOR),
-                    bg="#F1F5F9",
-                    padding="4px 8px",
-                    border_radius="4px",
-                    display="inline-block",
-                ),
+                rx.badge(rx.moment(transaction.date, format="DD MMMM YYYY"), variant="soft", color_scheme="gray"),
                 href=detail_url,
                 underline="none",
                 color="inherit",
@@ -65,7 +58,7 @@ def transaction_row(transaction: Transaction) -> rx.Component:
                 rx.text(
                     f"{transaction.amount:,.2f} {transaction.currency}",
                     weight="bold",
-                    color=rx.cond(transaction.amount < 0, "#E11D48", "#059669"),
+                    color=rx.cond(transaction.amount < 0, "var(--red-9)", "var(--green-9)"),
                     align="right",
                 ),
                 href=detail_url,
@@ -77,8 +70,8 @@ def transaction_row(transaction: Transaction) -> rx.Component:
             ),
             vertical_align="middle",
         ),
-        _hover={"background_color": "#F8FAFC"},
-        border_bottom=f"1px solid {BORDER_COLOR}",
+        _hover={"background_color": "var(--gray-a3)"},
+        border_bottom="1px solid var(--gray-a5)",
     )
 
 @rx.page(route="/transactions", on_load=TransactionsState.load_data)
@@ -91,21 +84,14 @@ def transactions() -> rx.Component:
                 rx.vstack(
                     # Header
                     rx.hstack(
-                        rx.icon(
-                            "menu",
-                            size=24,
-                            on_click=DashboardState.toggle_sidebar,
-                            display=["block", "block", "none", "none", "none"],
-                            cursor="pointer",
-                        ),
                         rx.vstack(
                             rx.heading(TransactionsState.translations["Transactions"], size="8"),
-                            rx.text(TransactionsState.translations["View and manage all your transactions."], color=SUBTLE_TEXT_COLOR),
+                            rx.text(TransactionsState.translations["View and manage all your transactions."], color_scheme="gray"),
                             align="start",
                             spacing="1",
                         ),
                         rx.spacer(),
-                        align_center=True,
+                        align_items="center",
                         spacing="4",
                         width="100%",
                     ),
@@ -114,7 +100,7 @@ def transactions() -> rx.Component:
                     rx.card(
                         rx.hstack(
                             rx.input(
-                                rx.input.slot(rx.icon("search", size=16, color=SUBTLE_TEXT_COLOR)),
+                                rx.input.slot(rx.icon("search", size=16)),
                                 placeholder=TransactionsState.translations["Search by name or description"],
                                 value=TransactionsState.search_query,
                                 on_change=TransactionsState.set_search_query,
@@ -124,15 +110,27 @@ def transactions() -> rx.Component:
                             ),
                             rx.spacer(),
                             # Filters
-                            rx.select(
-                                TransactionsState.account_filter_options,
+                            rx.select.root(
+                                rx.select.trigger(placeholder=TransactionsState.translations["All Accounts"]),
+                                rx.select.content(
+                                    rx.foreach(
+                                        TransactionsState.account_filter_options,
+                                        lambda option: rx.select.item(option, value=option)
+                                    )
+                                ),
                                 value=TransactionsState.selected_account_filter,
                                 on_change=TransactionsState.set_selected_account_filter,
                                 size="3",
                                 variant="surface"
                             ),
-                            rx.select(
-                                TransactionsState.category_filter_options,
+                            rx.select.root(
+                                rx.select.trigger(placeholder=TransactionsState.translations["All Categories"]),
+                                rx.select.content(
+                                    rx.foreach(
+                                        TransactionsState.category_filter_options,
+                                        lambda option: rx.select.item(option, value=option)
+                                    )
+                                ),
                                 value=TransactionsState.selected_category_filter,
                                 on_change=TransactionsState.set_selected_category_filter,
                                 size="3",
@@ -159,50 +157,44 @@ def transactions() -> rx.Component:
                                 height="80vh",
                             ),
                             # Transactions Table
-                            rx.vstack(
-                                rx.box(
-                                    rx.table.root(
-                                        rx.table.header(
-                                            rx.table.row(
-                                                rx.table.column_header_cell(TransactionsState.translations["NAME"], color=SUBTLE_TEXT_COLOR, font_size="12px", letter_spacing="0.6px"),
-                                                rx.table.column_header_cell(TransactionsState.translations["ACCOUNT"], color=SUBTLE_TEXT_COLOR, font_size="12px", letter_spacing="0.6px"),
-                                                rx.table.column_header_cell(TransactionsState.translations["DATE"], color=SUBTLE_TEXT_COLOR, font_size="12px", letter_spacing="0.6px"),
-                                                rx.table.column_header_cell(TransactionsState.translations["AMOUNT"], color=SUBTLE_TEXT_COLOR, font_size="12px", letter_spacing="0.6px", text_align="right"),
-                                                border_bottom=f"1px solid {BORDER_COLOR}",
-                                            )
-                                        ),
-                                        rx.table.body(
-                                            rx.foreach(
-                                                TransactionsState.filtered_transactions,
-                                                transaction_row
-                                            )
-                                        ),
-                                        variant="surface",
-                                        size="2",
-                                        width="100%",
+                            rx.box(
+                                rx.table.root(
+                                    rx.table.header(
+                                        rx.table.row(
+                                            rx.table.column_header_cell(TransactionsState.translations["NAME"]),
+                                            rx.table.column_header_cell(TransactionsState.translations["ACCOUNT"]),
+                                            rx.table.column_header_cell(TransactionsState.translations["DATE"]),
+                                            rx.table.column_header_cell(TransactionsState.translations["AMOUNT"], text_align="right"),
+                                        )
                                     ),
-                                    background="#FFFFFF",
-                                    border=f"1px solid {BORDER_COLOR}",
-                                    box_shadow="0px 1px 2px rgba(0, 0, 0, 0.05)",
-                                    border_radius="12px",
-                                    padding="0",
+                                    rx.table.body(
+                                        rx.foreach(
+                                            TransactionsState.filtered_transactions,
+                                            transaction_row
+                                        )
+                                    ),
+                                    variant="ghost",
+                                    size="2",
                                     width="100%",
-                                    overflow="hidden",
                                 ),
-                                rx.hstack(
-                                    rx.button(TransactionsState.translations["Previous"], on_click=TransactionsState.prev_page, disabled=TransactionsState.current_page <= 1),
-                                    rx.text(
-                                        f"{TransactionsState.translations['Page']} {TransactionsState.current_page} {TransactionsState.translations['of']} {TransactionsState.total_pages}"
-                                    ),
-                                    rx.button(TransactionsState.translations["Next"], on_click=TransactionsState.next_page, disabled=TransactionsState.current_page >= TransactionsState.total_pages),
-                                    justify="center",
-                                    align="center",
-                                    spacing="4",
-                                    margin_top="1em",
-                                ),
+                                background_color="var(--gray-a2)",
+                                padding="1rem",
+                                border_radius="var(--radius-3)",
                                 width="100%",
-                            )
+                            ),
                         )
+                    ),
+                    rx.hstack(
+                        rx.button(TransactionsState.translations["Previous"], on_click=TransactionsState.prev_page, disabled=TransactionsState.current_page <= 1),
+                        rx.text(
+                            f"{TransactionsState.translations['Page']} {TransactionsState.current_page} {TransactionsState.translations['of']} {TransactionsState.total_pages}"
+                        ),
+                        rx.button(TransactionsState.translations["Next"], on_click=TransactionsState.next_page, disabled=TransactionsState.current_page >= TransactionsState.total_pages),
+                        justify="center",
+                        align="center",
+                        spacing="4",
+                        margin_top="1em",
+                        width="100%",
                     ),
                     
                     spacing="5",
@@ -220,6 +212,5 @@ def transactions() -> rx.Component:
         account_modal(),
         manage_accounts_modal(),
         invitation_modal(),
-        background_color="#F6F8F6",
         min_height="100vh",
     )

@@ -1,6 +1,6 @@
 import reflex as rx
 from ..state import BaseState, DashboardState
-from ..styles import PRIMARY_COLOR, BORDER_COLOR, SUBTLE_TEXT_COLOR, TEXT_COLOR
+from ..styles import PRIMARY_COLOR
 from ..models.models import Account
 
 def sidebar_user_profile() -> rx.Component:
@@ -8,8 +8,8 @@ def sidebar_user_profile() -> rx.Component:
     return rx.hstack(
         rx.avatar(fallback=BaseState.logged_in_user.username[0], size="3"),
         rx.vstack(
-            rx.text(BaseState.logged_in_user.username, font_weight="700", color=TEXT_COLOR),
-            rx.text(BaseState.logged_in_user.email, font_size="0.75em", color=SUBTLE_TEXT_COLOR),
+            rx.text(BaseState.logged_in_user.username, font_weight="700"),
+            rx.text(BaseState.logged_in_user.email, font_size="0.75em", color_scheme="gray"),
             align_items="flex-start",
             spacing="1",
         ),
@@ -24,25 +24,24 @@ def sidebar_account_item(account: Account) -> rx.Component:
     return rx.button(
         rx.hstack(
             rx.box(
-                rx.icon("landmark", size=16, color=rx.cond(is_selected, "#FFFFFF", PRIMARY_COLOR)),
-                bg=rx.cond(is_selected, PRIMARY_COLOR, rx.color("green", 3)),
+                rx.icon("landmark", size=16),
                 border_radius="8px",
                 padding="8px",
             ),
             rx.vstack(
-                rx.text(account.name, font_weight="700", font_size="0.9em", color=TEXT_COLOR),
-                rx.text(f"{account.balance} {account.currency}", font_size="0.75em", color=rx.cond(is_selected, PRIMARY_COLOR, PRIMARY_COLOR), font_weight="600"),
+                rx.text(account.name, font_weight="700", font_size="0.9em"),
+                rx.text(f"{account.balance} {account.currency}", font_size="0.75em", font_weight="600"),
                 align_items="flex-start",
                 spacing="1",
             ),
             rx.spacer(),
-            rx.icon("chevron_right", color=SUBTLE_TEXT_COLOR),
+            rx.icon("chevron_right", color_scheme="gray"),
             align="center",
             width="100%",
         ),
         on_click=DashboardState.select_account(account.id),
-        background=rx.cond(is_selected, "#F0FDF4", "#F8FAFC"),
-        border=rx.cond(is_selected, f"1px solid {PRIMARY_COLOR}", f"1px solid {BORDER_COLOR}"),
+        variant=rx.cond(is_selected, "solid", "ghost"),
+        color_scheme=rx.cond(is_selected, "grass", "gray"),
         border_radius="12px",
         width="100%",
         padding="0.75em",
@@ -54,8 +53,8 @@ def sidebar_nav_link(text: str, href: str, icon: str) -> rx.Component:
     """A reusable component for navigation links in the sidebar."""
     return rx.link(
         rx.hstack(
-            rx.icon(icon, size=20, color=SUBTLE_TEXT_COLOR),
-            rx.text(DashboardState.translations[text], font_weight="500", color=TEXT_COLOR),
+            rx.icon(icon, size=20, color_scheme="gray"),
+            rx.text(DashboardState.translations[text], font_weight="500"),
             spacing="3",
             align="center",
         ),
@@ -63,7 +62,7 @@ def sidebar_nav_link(text: str, href: str, icon: str) -> rx.Component:
         width="100%",
         padding="0.75em 1em",
         border_radius="12px",
-        _hover={"background_color": BORDER_COLOR},
+        _hover={"background_color": "var(--gray-a3)"},
     )
 
 def sidebar() -> rx.Component:
@@ -77,7 +76,6 @@ def sidebar() -> rx.Component:
                 rx.icon(
                     "x",
                     size=24,
-                    color=SUBTLE_TEXT_COLOR,
                     on_click=DashboardState.toggle_sidebar,
                     display=["block", "block", "none", "none", "none"], # Visible only on mobile/tablet
                     cursor="pointer",
@@ -87,7 +85,7 @@ def sidebar() -> rx.Component:
             ),
             rx.vstack(
                 rx.hstack(
-                    rx.text(DashboardState.translations["Accounts"], font_weight="600", font_size="0.75em", letter_spacing="0.6px", text_transform="uppercase", color=SUBTLE_TEXT_COLOR),
+                    rx.text(DashboardState.translations["Accounts"], font_weight="600", font_size="0.75em", letter_spacing="0.6px", text_transform="uppercase", color_scheme="gray"),
                     rx.spacer(),
                     rx.link(
                         DashboardState.translations["Add New"],
@@ -127,8 +125,7 @@ def sidebar() -> rx.Component:
                     on_click=DashboardState.toggle_transaction_modal,
                     width="100%",
                     height="48px",
-                    background=PRIMARY_COLOR,
-                    color=TEXT_COLOR,
+                    color_scheme="grass",
                     font_weight="700",
                 ),
             ),
@@ -136,8 +133,7 @@ def sidebar() -> rx.Component:
             spacing="5",
             width="288px",
             height="100vh",
-            background_color="#FFFFFF",
-            border_right=f"1px solid {BORDER_COLOR}",
+            border_right="1px solid var(--gray-a5)",
             align_items="flex-start",
         ),
         position="fixed",
@@ -153,9 +149,9 @@ def sidebar() -> rx.Component:
         ],
         width=["100%", "100%", "288px", "288px", "288px"],
         background_color=[
-            rx.cond(DashboardState.is_sidebar_collapsed, "transparent", "rgba(0,0,0,0.5)"), # Mobile
-            rx.cond(DashboardState.is_sidebar_collapsed, "transparent", "rgba(0,0,0,0.5)"), # Tablet
-            "transparent", # Desktop
+            "var(--gray-1)",
+            "var(--gray-1)",
+            "transparent",
             "transparent",
             "transparent"
         ],

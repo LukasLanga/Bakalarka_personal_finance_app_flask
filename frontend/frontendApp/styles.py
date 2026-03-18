@@ -1,41 +1,39 @@
 # In frontend/frontendApp/styles.py
 
+# This is the primary brand color. It's used for important buttons and links.
 PRIMARY_COLOR = "#13EC5B"
-TEXT_COLOR = "#0F172A"
-LABEL_TEXT_COLOR = "#334155"
-SUBTLE_TEXT_COLOR = "#64748B"
-PLACEHOLDER_COLOR = "#94A3B8"
-BORDER_COLOR = "#F1F5F9"
-BACKGROUND_COLOR = "#F6F8F6"
-WHITE = "#FFFFFF"
 
-base_style = {
-    "color": TEXT_COLOR,
-}
+# These color constants are no longer recommended for theme-aware apps.
+# It's better to use Radix color schemes (e.g., color_scheme="gray")
+# or theme variables (e.g., "var(--gray-11)") in your components.
+# TEXT_COLOR = "#0F172A"
+# LABEL_TEXT_COLOR = "#334155"
+# SUBTLE_TEXT_COLOR = "#64748B"
+# PLACEHOLDER_COLOR = "#94A3B8"
+# BORDER_COLOR = "#F1F5F9"
+# BACKGROUND_COLOR = "#F6F8F6"
+# WHITE = "#FFFFFF"
+
+# A base_style is no longer needed, as the rx.theme component handles
+# global styles much more effectively for both light and dark modes.
 
 card_style = {
     "width": "480px",
     "max_width": "90%",
-    "background_color": WHITE,
-    "border": f"1px solid {BORDER_COLOR}",
-    "box_shadow": "0px 8px 30px rgba(0, 0, 0, 0.04)",
     "border_radius": "12px",
     "padding": "0px",
+    # In dark mode, the theme will apply a subtle background and border automatically.
+    # In light mode, it will be white with a faint border.
 }
 
 input_style = {
-    "background_color": "#F8FAFC",
-    "border": "1px solid #E2E8F0",
     "border_radius": "8px",
     "height": "48px",
     "width": "100%",
-    "color": TEXT_COLOR,
-    "_placeholder": {"color": PLACEHOLDER_COLOR},
 }
 
 label_style = {
     "font_weight": "500",
-    "color": LABEL_TEXT_COLOR,
 }
 
 button_style = {
@@ -44,7 +42,7 @@ button_style = {
     "border_radius": "8px",
     "height": "48px",
     "width": "100%",
-    "color": TEXT_COLOR,
+    "color": "#0F172A",
     "font_weight": "600",
     "_hover": {"opacity": 0.9},
 }

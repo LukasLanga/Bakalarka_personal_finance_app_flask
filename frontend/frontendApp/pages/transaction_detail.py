@@ -5,7 +5,7 @@ from ..components.topbar import topbar
 from ..components.transaction_modal import transaction_modal
 from ..components.account_modal import account_modal
 from ..components.manage_accounts_modal import manage_accounts_modal
-from ..styles import TEXT_COLOR, SUBTLE_TEXT_COLOR, PRIMARY_COLOR, BORDER_COLOR
+from ..styles import PRIMARY_COLOR
 
 @rx.page(route="/transaction/[account_id]/[transaction_id]", on_load=TransactionDetailState.get_transaction_detail)
 def transaction_detail() -> rx.Component:
@@ -25,7 +25,7 @@ def transaction_detail() -> rx.Component:
                                 rx.text(TransactionDetailState.translations["Back"], weight="medium"),
                                 align="center",
                                 spacing="2",
-                                color=SUBTLE_TEXT_COLOR,
+                                color_scheme="gray",
                             ),
                             href="/",
                         ),
@@ -62,12 +62,12 @@ def transaction_detail() -> rx.Component:
                                             rx.heading(
                                                 f"${TransactionDetailState.transaction.amount:,.2f} {TransactionDetailState.transaction.currency}",
                                                 size="8",
-                                                color=rx.cond(TransactionDetailState.transaction.amount < 0, "red", "green"),
+                                                color=rx.cond(TransactionDetailState.transaction.amount < 0, "var(--red-9)", "var(--green-9)"),
                                             ),
                                             width="100%",
                                             align="center",
                                             padding_bottom="32px",
-                                            border_bottom=f"1px solid {BORDER_COLOR}",
+                                            border_bottom="1px solid var(--gray-a5)",
                                         ),
                                     ),
 
@@ -76,23 +76,23 @@ def transaction_detail() -> rx.Component:
                                         # Details (View Mode)
                                         rx.grid(
                                             rx.vstack(
-                                                rx.text(TransactionDetailState.translations["Account"], weight="bold", color=rx.color("gray", 12)),
-                                                rx.text(TransactionDetailState.account_name, color=SUBTLE_TEXT_COLOR),
+                                                rx.text(TransactionDetailState.translations["Account"], weight="bold", color_scheme="gray"),
+                                                rx.text(TransactionDetailState.account_name, color_scheme="gray"),
                                                 spacing="1",
                                             ),
                                             rx.vstack(
-                                                rx.text(TransactionDetailState.translations["Date"], weight="bold", color=TEXT_COLOR),
-                                                rx.text(rx.moment(TransactionDetailState.transaction.date, format="DD MMMM YYYY"), color=SUBTLE_TEXT_COLOR),
+                                                rx.text(TransactionDetailState.translations["Date"], weight="bold"),
+                                                rx.text(rx.moment(TransactionDetailState.transaction.date, format="DD MMMM YYYY"), color_scheme="gray"),
                                                 spacing="1",
                                             ),
                                             rx.vstack(
-                                                rx.text(TransactionDetailState.translations["Category"], weight="bold", color=TEXT_COLOR),
+                                                rx.text(TransactionDetailState.translations["Category"], weight="bold"),
                                                 rx.badge(TransactionDetailState.category_name, variant="soft"),
                                                 spacing="1",
                                             ),
                                             rx.vstack(
-                                                rx.text(TransactionDetailState.translations["Description"], weight="bold", color=TEXT_COLOR),
-                                                rx.text(TransactionDetailState.transaction.description, color=SUBTLE_TEXT_COLOR),
+                                                rx.text(TransactionDetailState.translations["Description"], weight="bold"),
+                                                rx.text(TransactionDetailState.transaction.description, color_scheme="gray"),
                                                 spacing="1",
                                             ),
                                             columns="2",
@@ -103,8 +103,8 @@ def transaction_detail() -> rx.Component:
                                         # Details (Edit Mode)
                                         rx.flex(
                                             rx.vstack(
-                                                rx.text(TransactionDetailState.translations["General Information"], weight="bold", size="2", color=rx.color("gray", 12)),
-                                                rx.text(TransactionDetailState.translations["Name"], size="1", margin_bottom="-8px", color=rx.color("gray", 11)),
+                                                rx.text(TransactionDetailState.translations["General Information"], weight="bold", size="2", color_scheme="gray"),
+                                                rx.text(TransactionDetailState.translations["Name"], size="1", margin_bottom="-8px", color_scheme="gray"),
                                                 rx.input(
                                                     value=TransactionDetailState.edit_name,
                                                     on_change=TransactionDetailState.set_edit_name,
@@ -113,7 +113,7 @@ def transaction_detail() -> rx.Component:
                                                     color_scheme="gray",
                                                     variant="surface",
                                                 ),
-                                                rx.text(TransactionDetailState.translations["Description"], size="1", margin_bottom="-8px", color=rx.color("gray", 11)),
+                                                rx.text(TransactionDetailState.translations["Description"], size="1", margin_bottom="-8px", color_scheme="gray"),
                                                 rx.input(
                                                     value=TransactionDetailState.edit_description,
                                                     on_change=TransactionDetailState.set_edit_description,
@@ -122,7 +122,7 @@ def transaction_detail() -> rx.Component:
                                                     color_scheme="gray",
                                                     variant="surface",
                                                 ),
-                                                rx.text(TransactionDetailState.translations["Date"], size="1", margin_bottom="-8px", color=rx.color("gray", 11)),
+                                                rx.text(TransactionDetailState.translations["Date"], size="1", margin_bottom="-8px", color_scheme="gray"),
                                                 rx.input(
                                                     value=TransactionDetailState.edit_date,
                                                     on_change=TransactionDetailState.set_edit_date,
@@ -135,8 +135,8 @@ def transaction_detail() -> rx.Component:
                                                 width="100%",
                                             ),
                                             rx.vstack(
-                                                rx.text(TransactionDetailState.translations["Financial Details"], weight="bold", size="2", color=rx.color("gray", 12)),
-                                                rx.text(TransactionDetailState.translations["Amount"], size="1", margin_bottom="-8px", color=rx.color("gray", 11)),
+                                                rx.text(TransactionDetailState.translations["Financial Details"], weight="bold", size="2", color_scheme="gray"),
+                                                rx.text(TransactionDetailState.translations["Amount"], size="1", margin_bottom="-8px", color_scheme="gray"),
                                                 rx.input(
                                                     value=TransactionDetailState.edit_amount.to_string(),
                                                     on_change=TransactionDetailState.set_edit_amount,
@@ -146,7 +146,7 @@ def transaction_detail() -> rx.Component:
                                                     color_scheme="gray",
                                                     variant="surface",
                                                 ),
-                                                rx.text(TransactionDetailState.translations["Category"], size="1", margin_bottom="-8px", color=rx.color("gray", 11)),
+                                                rx.text(TransactionDetailState.translations["Category"], size="1", margin_bottom="-8px", color_scheme="gray"),
                                                 rx.select.root(
                                                     rx.select.trigger(
                                                         placeholder=TransactionDetailState.translations["Select Category"],
@@ -205,7 +205,7 @@ def transaction_detail() -> rx.Component:
                                         ),
                                         width="100%",
                                         padding_top="20px",
-                                        border_top=f"1px solid {BORDER_COLOR}",
+                                        border_top="1px solid var(--gray-a5)",
                                     ),
                                     width="100%",
                                 ),
@@ -231,6 +231,5 @@ def transaction_detail() -> rx.Component:
         transaction_modal(),
         account_modal(),
         manage_accounts_modal(),
-        background_color="#F6F8F6",
         min_height="100vh",
     )

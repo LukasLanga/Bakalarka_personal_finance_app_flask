@@ -6,17 +6,18 @@ from ..components.transaction_modal import transaction_modal
 from ..components.account_modal import account_modal
 from ..components.manage_accounts_modal import manage_accounts_modal
 from ..components.invitation_modal import invitation_modal
-from ..styles import BORDER_COLOR, SUBTLE_TEXT_COLOR, TEXT_COLOR, PRIMARY_COLOR
+from ..styles import PRIMARY_COLOR
 from ..models.models import Transaction
 
-def summary_card(title: str, value: str, icon: str, icon_bg: str, icon_color: str) -> rx.Component:
+def summary_card(title: str, value: str, icon: str, color_scheme: str) -> rx.Component:
     """A card for displaying a summary metric."""
     return rx.card(
         rx.vstack(
             rx.hstack(
                 rx.box(
-                    rx.icon(icon, size=24, color=icon_color),
-                    bg=icon_bg,
+                    rx.icon(icon, size=24),
+                    bg=rx.color(color_scheme, 3),
+                    color=rx.color(color_scheme, 9),
                     border_radius="8px",
                     padding="8px",
                 ),
@@ -26,7 +27,7 @@ def summary_card(title: str, value: str, icon: str, icon_bg: str, icon_color: st
             ),
             rx.spacer(),
             rx.vstack(
-                rx.text(DashboardState.translations[title], size="2", color=SUBTLE_TEXT_COLOR, weight="medium"),
+                rx.text(DashboardState.translations[title], size="2", color_scheme="gray", weight="medium"),
                 rx.heading(value, size="6", weight="bold"),
                 spacing="1",
                 align="start",
@@ -40,12 +41,12 @@ def summary_card(title: str, value: str, icon: str, icon_bg: str, icon_color: st
 
 def transaction_row(transaction: Transaction) -> rx.Component:
     """A single row for the recent transactions table."""
-    detail_url = "/transaction/" + transaction.account_id.to_string() + "/" + transaction.id.to_string()
+    detail_url = f"/transaction/{transaction.account_id}/{transaction.id}"
 
     return rx.table.row(
         rx.table.row_header_cell(
             rx.link(
-                rx.text(transaction.name, weight="bold", color=TEXT_COLOR, size="2"),
+                rx.text(transaction.name, weight="bold", size="2"),
                 href=detail_url,
                 underline="none",
                 color="inherit",
@@ -57,9 +58,9 @@ def transaction_row(transaction: Transaction) -> rx.Component:
         rx.table.cell(
             rx.link(
                 rx.text(
-                    DashboardState.account_id_to_name[transaction.account_id.to_string()],
+                    DashboardState.account_id_to_name.get(str(transaction.account_id), "N/A"),
                     size="2",
-                    color=SUBTLE_TEXT_COLOR
+                    color_scheme="gray"
                 ),
                 href=detail_url,
                 underline="none",
@@ -72,13 +73,7 @@ def transaction_row(transaction: Transaction) -> rx.Component:
         ),
         rx.table.cell(
             rx.link(
-                rx.box(
-                    rx.text(rx.moment(transaction.date, format="DD MMMM YYYY"), size="2", weight="medium", color=SUBTLE_TEXT_COLOR),
-                    bg="#F1F5F9",
-                    padding="4px 8px",
-                    border_radius="4px",
-                    display="inline-block",
-                ),
+                rx.badge(rx.moment(transaction.date, format="DD MMMM YYYY"), variant="soft", color_scheme="gray"),
                 href=detail_url,
                 underline="none",
                 color="inherit",
@@ -93,7 +88,7 @@ def transaction_row(transaction: Transaction) -> rx.Component:
                 rx.text(
                     f"{transaction.amount:,.2f} {transaction.currency}",
                     weight="bold",
-                    color=rx.cond(transaction.amount < 0, "#E11D48", "#059669"), # Red for negative, Green for positive
+                    color=rx.cond(transaction.amount < 0, "var(--red-9)", "var(--green-9)"),
                     align="right",
                 ),
                 href=detail_url,
@@ -105,8 +100,8 @@ def transaction_row(transaction: Transaction) -> rx.Component:
             ),
             vertical_align="middle",
         ),
-        _hover={"background_color": "#F8FAFC"},
-        border_bottom=f"1px solid {BORDER_COLOR}",
+        _hover={"background_color": "var(--gray-a3)"},
+        border_bottom="1px solid var(--gray-a5)",
     )
 
 def yearly_overview_chart() -> rx.Component:
@@ -116,8 +111,8 @@ def yearly_overview_chart() -> rx.Component:
             rx.recharts.x_axis(data_key="month"),
             rx.recharts.y_axis(),
             rx.recharts.tooltip(),
-            rx.recharts.bar(data_key="income", fill="#10B981", name=DashboardState.translations["Income"], radius=[4, 4, 0, 0]),
-            rx.recharts.bar(data_key="expenses", fill="#F43F5E", name=DashboardState.translations["Expenses"], radius=[4, 4, 0, 0]),
+            rx.recharts.bar(data_key="income", fill="var(--green-9)", name=DashboardState.translations["Income"], radius=[4, 4, 0, 0]),
+            rx.recharts.bar(data_key="expenses", fill="var(--red-9)", name=DashboardState.translations["Expenses"], radius=[4, 4, 0, 0]),
             data=DashboardState.yearly_overview,
         ),
         min_height=250,
@@ -125,21 +120,21 @@ def yearly_overview_chart() -> rx.Component:
 
 def yearly_overview_card() -> rx.Component:
     """A card containing the yearly overview bar chart."""
-    return rx.box(
+    return rx.card(
         rx.vstack(
             rx.hstack(
                 rx.vstack(
                     rx.heading(DashboardState.translations["Overview"], size="4"),
-                    rx.text(DashboardState.translations["Your income and expenses for the last 12 months."], color=SUBTLE_TEXT_COLOR, size="2"),
+                    rx.text(DashboardState.translations["Your income and expenses for the last 12 months."], color_scheme="gray", size="2"),
                     align="start",
                     spacing="1",
                 ),
                 rx.spacer(),
                 rx.hstack(
-                    rx.box(bg="#10B981", width="12px", height="12px", border_radius="full"),
-                    rx.text(DashboardState.translations["Income"], size="2", color=SUBTLE_TEXT_COLOR),
-                    rx.box(bg="#F43F5E", width="12px", height="12px", border_radius="full"),
-                    rx.text(DashboardState.translations["Expenses"], size="2", color=SUBTLE_TEXT_COLOR),
+                    rx.box(bg="var(--green-9)", width="12px", height="12px", border_radius="full"),
+                    rx.text(DashboardState.translations["Income"], size="2", color_scheme="gray"),
+                    rx.box(bg="var(--red-9)", width="12px", height="12px", border_radius="full"),
+                    rx.text(DashboardState.translations["Expenses"], size="2", color_scheme="gray"),
                     spacing="3",
                     align="center",
                 ),
@@ -149,20 +144,15 @@ def yearly_overview_card() -> rx.Component:
             spacing="4",
             width="100%",
         ),
-        background="#FFFFFF",
-        border=f"1px solid {BORDER_COLOR}",
-        box_shadow="0px 1px 2px rgba(0, 0, 0, 0.05)",
-        border_radius="12px",
-        padding="24px",
         width="100%",
     )
 
 def recent_transactions_table() -> rx.Component:
     """A table to display recent transactions."""
-    return rx.box(
+    return rx.card(
         rx.vstack(
             rx.hstack(
-                rx.heading(DashboardState.translations["Recent Transactions"], size="4", color=TEXT_COLOR),
+                rx.heading(DashboardState.translations["Recent Transactions"], size="4"),
                 rx.spacer(),
                 rx.link(DashboardState.translations["View All"], href="/transactions", size="2", color=PRIMARY_COLOR, weight="bold"),
                 width="100%",
@@ -172,11 +162,11 @@ def recent_transactions_table() -> rx.Component:
             rx.table.root(
                 rx.table.header(
                     rx.table.row(
-                        rx.table.column_header_cell(DashboardState.translations["NAME"], color=SUBTLE_TEXT_COLOR, font_size="12px", letter_spacing="0.6px"),
-                        rx.table.column_header_cell(DashboardState.translations["ACCOUNT"], color=SUBTLE_TEXT_COLOR, font_size="12px", letter_spacing="0.6px"),
-                        rx.table.column_header_cell(DashboardState.translations["DATE"], color=SUBTLE_TEXT_COLOR, font_size="12px", letter_spacing="0.6px"),
-                        rx.table.column_header_cell(DashboardState.translations["AMOUNT"], color=SUBTLE_TEXT_COLOR, font_size="12px", letter_spacing="0.6px", text_align="right"),
-                        border_bottom=f"1px solid {BORDER_COLOR}",
+                        rx.table.column_header_cell(DashboardState.translations["NAME"]),
+                        rx.table.column_header_cell(DashboardState.translations["ACCOUNT"]),
+                        rx.table.column_header_cell(DashboardState.translations["DATE"]),
+                        rx.table.column_header_cell(DashboardState.translations["AMOUNT"], text_align="right"),
+                        border_bottom="1px solid var(--gray-a5)",
                     )
                 ),
                 rx.table.body(
@@ -185,18 +175,13 @@ def recent_transactions_table() -> rx.Component:
                         transaction_row
                     )
                 ),
-                variant="surface",
+                variant="ghost",
                 size="2",
                 width="100%",
             ),
             spacing="0",
             width="100%",
         ),
-        background="#FFFFFF",
-        border=f"1px solid {BORDER_COLOR}",
-        box_shadow="0px 1px 2px rgba(0, 0, 0, 0.05)",
-        border_radius="12px",
-        padding="24px",
         width="100%",
     )
 
@@ -295,27 +280,9 @@ def dashboard_content() -> rx.Component:
     return rx.vstack(
         # Summary Cards
         rx.grid(
-            summary_card(
-                "Total Balance",
-                rx.text(f"{DashboardState.dashboard_summary.total_balance:,.2f} ", DashboardState.selected_account_currency),
-                "wallet",
-                rx.color("green", 3),
-                rx.color("green", 9),
-            ),
-            summary_card(
-                "Monthly Income",
-                rx.text(f"{DashboardState.dashboard_summary.monthly_income:,.2f} ", DashboardState.selected_account_currency),
-                "arrow_up",
-                rx.color("blue", 3),
-                rx.color("blue", 9),
-            ),
-            summary_card(
-                "Monthly Expenses",
-                rx.text(f"{DashboardState.dashboard_summary.monthly_expenses:,.2f} ", DashboardState.selected_account_currency),
-                "arrow_down",
-                rx.color("red", 3),
-                rx.color("red", 9),
-            ),
+            summary_card("Total Balance", f"{DashboardState.dashboard_summary.total_balance:,.2f} {DashboardState.selected_account_currency}", "wallet", "green"),
+            summary_card("Monthly Income", f"{DashboardState.dashboard_summary.monthly_income:,.2f} {DashboardState.selected_account_currency}", "arrow_up", "blue"),
+            summary_card("Monthly Expenses", f"{DashboardState.dashboard_summary.monthly_expenses:,.2f} {DashboardState.selected_account_currency}", "arrow_down", "red"),
             columns={"base": "1", "md": "3"},
             gap="4",
             width="100%",
@@ -344,17 +311,9 @@ def index() -> rx.Component:
             rx.box(
                 rx.vstack(
                     rx.hstack(
-                        # Hamburger menu for mobile
-                        rx.icon(
-                            "menu",
-                            size=24,
-                            on_click=DashboardState.toggle_sidebar,
-                            display=["block", "block", "none", "none", "none"],
-                            cursor="pointer",
-                        ),
                         rx.vstack(
                             rx.heading(DashboardState.translations["Dashboard"], size="8"),
-                            rx.text(DashboardState.translations["Welcome back! Here is your financial overview."], color=SUBTLE_TEXT_COLOR),
+                            rx.text(DashboardState.translations["Welcome back! Here is your financial overview."], color_scheme="gray"),
                             align="start",
                             spacing="1",
                         ),
@@ -397,5 +356,4 @@ def index() -> rx.Component:
         account_modal(),
         manage_accounts_modal(),
         invitation_modal(),
-        background_color="#F6F8F6",
     )

@@ -1,6 +1,6 @@
 import reflex as rx
 from ..state import RegisterState
-from ..styles import base_style, card_style, input_style, button_style, label_style, PRIMARY_COLOR, SUBTLE_TEXT_COLOR, BACKGROUND_COLOR, BORDER_COLOR
+from ..styles import card_style, input_style, button_style, label_style, PRIMARY_COLOR
 
 def password_input(placeholder: str, on_blur_event, show_var, toggle_event) -> rx.Component:
     return rx.box(
@@ -16,7 +16,6 @@ def password_input(placeholder: str, on_blur_event, show_var, toggle_event) -> r
                 tag=rx.cond(show_var, "eye_off", "eye"),
                 on_click=toggle_event,
                 cursor="pointer",
-                color=SUBTLE_TEXT_COLOR,
             ),
             position="absolute",
             right="1em",
@@ -34,7 +33,7 @@ def register_page() -> rx.Component:
             # Header Section
             rx.vstack(
                 rx.heading(RegisterState.translations["Create an Account"], size="7", font_weight="700"),
-                rx.text(RegisterState.translations["Start making your financial life easier."], color=SUBTLE_TEXT_COLOR),
+                rx.text(RegisterState.translations["Start making your financial life easier."]),
                 align="center",
                 padding="32px 32px 8px",
                 width="100%",
@@ -82,7 +81,7 @@ def register_page() -> rx.Component:
                 rx.button(
                     rx.cond(
                         RegisterState.is_loading,
-                        rx.spinner(color="black"),
+                        rx.spinner(),
                         RegisterState.translations["Create Account"],
                     ),
                     on_click=RegisterState.handle_registration,
@@ -102,18 +101,14 @@ def register_page() -> rx.Component:
                 rx.text(
                     RegisterState.translations["Already have an account? "],
                     rx.link(RegisterState.translations["Log in"], href="/login", color=PRIMARY_COLOR, font_weight="500"),
-                    color="#475569",
                 ),
-                background_color="#F8FAFC",
-                border_top=f"1px solid {BORDER_COLOR}",
+                border_top="1px solid var(--gray-a5)",
                 padding="16px",
                 width="100%",
             ),
             style=card_style,
             spacing="0",
         ),
-        background=BACKGROUND_COLOR,
         width="100%",
         min_height="100vh",
-        style=base_style,
     )
