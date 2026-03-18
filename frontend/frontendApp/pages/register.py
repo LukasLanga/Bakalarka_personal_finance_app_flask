@@ -1,6 +1,8 @@
 import reflex as rx
 from ..state import RegisterState
 from ..styles import card_style, input_style, button_style, label_style, PRIMARY_COLOR
+from ..components.language_switcher import language_switcher
+
 
 def password_input(placeholder: str, on_blur_event, show_var, toggle_event) -> rx.Component:
     return rx.box(
@@ -26,89 +28,102 @@ def password_input(placeholder: str, on_blur_event, show_var, toggle_event) -> r
         width="100%",
     )
 
+
 @rx.page(route="/register", title="Register")
 def register_page() -> rx.Component:
-    return rx.center(
-        rx.vstack(
-            # Header Section
+    return rx.box(
+        rx.center(
             rx.vstack(
-                rx.heading(RegisterState.translations["Create an Account"], size="7", font_weight="700"),
-                rx.text(RegisterState.translations["Start making your financial life easier."]),
-                align="center",
-                padding="32px 32px 8px",
-                width="100%",
-            ),
-            # Form
-            rx.vstack(
+                # Header Section
                 rx.vstack(
-                    rx.text(RegisterState.translations["Username"], style=label_style),
-                    rx.input(placeholder=RegisterState.translations["Enter your username"], on_blur=RegisterState.set_username, style=input_style),
-                    spacing="2",
-                    align="stretch",
+                    rx.heading(RegisterState.translations["Create an Account"], size="7", font_weight="700"),
+                    rx.text(RegisterState.translations["Start making your financial life easier."]),
+                    align="center",
+                    padding="32px 32px 8px",
                     width="100%",
                 ),
+                # Form
                 rx.vstack(
-                    rx.text(RegisterState.translations["Email Address"], style=label_style),
-                    rx.input(placeholder=RegisterState.translations["name@example.com"], on_blur=RegisterState.set_email, type="email", style=input_style),
-                    spacing="2",
-                    align="stretch",
-                    width="100%",
-                ),
-                rx.vstack(
-                    rx.text(RegisterState.translations["Password"], style=label_style),
-                    password_input(
-                        placeholder="Create a strong password",
-                        on_blur_event=RegisterState.set_password,
-                        show_var=RegisterState.show_password,
-                        toggle_event=RegisterState.toggle_show_password,
+                    rx.vstack(
+                        rx.text(RegisterState.translations["Username"], style=label_style),
+                        rx.input(placeholder=RegisterState.translations["Enter your username"],
+                                 on_blur=RegisterState.set_username, style=input_style),
+                        spacing="2",
+                        align="stretch",
+                        width="100%",
                     ),
-                    spacing="2",
-                    align="stretch",
-                    width="100%",
-                ),
-                rx.vstack(
-                    rx.text(RegisterState.translations["Confirm Password"], style=label_style),
-                    password_input(
-                        placeholder="Confirm your password",
-                        on_blur_event=RegisterState.set_confirm_password,
-                        show_var=RegisterState.show_confirm_password,
-                        toggle_event=RegisterState.toggle_show_confirm_password,
+                    rx.vstack(
+                        rx.text(RegisterState.translations["Email Address"], style=label_style),
+                        rx.input(placeholder=RegisterState.translations["name@example.com"],
+                                 on_blur=RegisterState.set_email, type="email", style=input_style),
+                        spacing="2",
+                        align="stretch",
+                        width="100%",
                     ),
-                    spacing="2",
-                    align="stretch",
-                    width="100%",
-                ),
-                rx.button(
+                    rx.vstack(
+                        rx.text(RegisterState.translations["Password"], style=label_style),
+                        password_input(
+                            placeholder="Create a strong password",
+                            on_blur_event=RegisterState.set_password,
+                            show_var=RegisterState.show_password,
+                            toggle_event=RegisterState.toggle_show_password,
+                        ),
+                        spacing="2",
+                        align="stretch",
+                        width="100%",
+                    ),
+                    rx.vstack(
+                        rx.text(RegisterState.translations["Confirm Password"], style=label_style),
+                        password_input(
+                            placeholder="Confirm your password",
+                            on_blur_event=RegisterState.set_confirm_password,
+                            show_var=RegisterState.show_confirm_password,
+                            toggle_event=RegisterState.toggle_show_confirm_password,
+                        ),
+                        spacing="2",
+                        align="stretch",
+                        width="100%",
+                    ),
+                    rx.button(
+                        rx.cond(
+                            RegisterState.is_loading,
+                            rx.spinner(),
+                            RegisterState.translations["Create Account"],
+                        ),
+                        on_click=RegisterState.handle_registration,
+                        style=button_style,
+                        disabled=RegisterState.is_loading,
+                    ),
                     rx.cond(
-                        RegisterState.is_loading,
-                        rx.spinner(),
-                        RegisterState.translations["Create Account"],
+                        RegisterState.error_message != "",
+                        rx.text(RegisterState.error_message, color="red", text_align="center", width="100%"),
                     ),
-                    on_click=RegisterState.handle_registration,
-                    style=button_style,
-                    disabled=RegisterState.is_loading,
+                    spacing="5",
+                    padding="0px 32px 24px",
+                    width="100%",
                 ),
-                rx.cond(
-                    RegisterState.error_message != "",
-                    rx.text(RegisterState.error_message, color="red", text_align="center", width="100%"),
+                # Footer section
+                rx.center(
+                    rx.text(
+                        RegisterState.translations["Already have an account? "],
+                        rx.link(RegisterState.translations["Log in"], href="/login", color=PRIMARY_COLOR,
+                                font_weight="500"),
+                    ),
+                    border_top=f"1px solid var(--gray-a5)",
+                    padding="16px",
+                    width="100%",
                 ),
-                spacing="5",
-                padding="0px 32px 24px",
-                width="100%",
+                style=card_style,
+                spacing="0",
             ),
-            # Footer section
-            rx.center(
-                rx.text(
-                    RegisterState.translations["Already have an account? "],
-                    rx.link(RegisterState.translations["Log in"], href="/login", color=PRIMARY_COLOR, font_weight="500"),
-                ),
-                border_top="1px solid var(--gray-a5)",
-                padding="16px",
-                width="100%",
-            ),
-            style=card_style,
-            spacing="0",
+            width="100%",
+            min_height="100vh",
         ),
-        width="100%",
-        min_height="100vh",
+        rx.box(
+            language_switcher(),
+            position="absolute",
+            top="1em",
+            right="1em",
+            z_index="10",
+        ),
     )
