@@ -34,10 +34,12 @@ def invite_user(account_id):
     if not invited_email or not role:
         return jsonify({"message": "Invalid data: invited_email and role are required."}), 400
     
+    invited_email = invited_email.lower()
+    
     if role not in [r.value for r in AccountRole]:
         return jsonify({"message": f"Invalid role. Must be one of: {[r.value for r in AccountRole]}"}), 400
 
-    if invited_email == current_user.email:
+    if invited_email == current_user.email.lower():
         return jsonify({"message": "You cannot invite yourself to an account."}), 400
 
     token = secrets.token_urlsafe(32)
@@ -85,7 +87,7 @@ def accept_invitation():
     if status != 'pending':
         return jsonify({"message": f"This invitation has already been {status}."}), 409
 
-    if inv_email != current_user.email:
+    if inv_email != current_user.email.lower():
         return jsonify({"message": "This invitation is for a different user."}), 403
 
     insert_query = text("""
@@ -117,7 +119,7 @@ def decline_invitation():
     
     inv_id, inv_email, status = invitation
 
-    if inv_email != current_user.email:
+    if inv_email != current_user.email.lower():
         return jsonify({"message": "This invitation is for a different user."}), 403
         
     if status != 'pending':
@@ -147,7 +149,7 @@ def get_pending_invitations():
         ORDER BY i.created_at DESC;
     """)
     
-    results = db.session.execute(query, {"email": current_user.email}).fetchall()
+    results = db.session.execute(query, {"email": current_user.email.lower()}).fetchall()
     
     invitations = [
         {
