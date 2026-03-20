@@ -17,6 +17,8 @@ class DashboardState(BaseState):
     pending_invitations: List[Invitation] = []
     user_roles: Dict[str, str] = {}
     is_loading: bool = False
+    is_syncing: bool = False
+    is_kb_connected: bool = False
     show_transaction_modal: bool = False
     show_account_modal: bool = False
     show_manage_accounts_modal: bool = False
@@ -147,6 +149,7 @@ class DashboardState(BaseState):
         yield
 
         try:
+            self.load_kb_connection_status()
             async for event in self.load_accounts():
                 yield event
             
@@ -263,7 +266,8 @@ class DashboardState(BaseState):
             client.accept_invitation(self.selected_invitation.token)
             self.set_show_invitation_modal(False)
             self.load_pending_invitations()
-            return self.load_accounts()
+            async for event in self.load_accounts():
+                yield event
         except Exception as e:
             print(f"Error accepting invitation: {e}")
 
@@ -277,3 +281,24 @@ class DashboardState(BaseState):
 
     def navigate_to_transaction(self, account_id: int, transaction_id: int):
         return rx.redirect(f"/transaction/{account_id}/{transaction_id}")
+
+    # --- Bank Integration Event Handlers ---
+    def load_kb_connection_status(self):
+        try:
+            self.is_kb_connected = client.get_kb_connection_status()
+        except Exception:
+            self.is_kb_connected = False
+
+    async def connect_to_bank(self):
+        self.is_syncing = True
+        self.error_message = ""
+        try:
+            client.connect_to_kb_bank()
+            self.is_kb_connected = True
+        except httpx.HTTPStatusError as e:
+            self.error_message = f"Failed to connect: {e.response.status_code} - {e.response.text}"
+        except Exception as e:
+            self.error_message = f"An unexpected error occurred: {str(e)}"
+        finally:
+            self.is_syncing = False
+            yield

@@ -132,6 +132,9 @@ TRANSLATIONS = {
         "Transaction name cannot be empty.": "Transaction name cannot be empty.",
         "Transaction amount cannot be zero.": "Transaction amount cannot be zero.",
         "Please select a valid category.": "Please select a valid category.",
+        "Bank Integration": "Bank Integration",
+        "Connect to Bank": "Connect to Bank",
+        "Add Bank Account": "Add Bank Account",
     },
     "sk": {
         "Dashboard": "Prehľad",
@@ -266,6 +269,9 @@ TRANSLATIONS = {
         "Transaction name cannot be empty.": "Názov transakcie nemôže byť prázdny.",
         "Transaction amount cannot be zero.": "Suma transakcie nemôže byť nulová.",
         "Please select a valid category.": "Prosím, vyberte platnú kategóriu.",
+        "Bank Integration": "Banková integrácia",
+        "Connect to Bank": "Pripojiť k banke",
+        "Add Bank Account": "Pridať bankový účet",
     },
     "cz": {
         "Dashboard": "Přehled",
@@ -400,5 +406,8 @@ TRANSLATIONS = {
         "Transaction name cannot be empty.": "Název transakce nemůže být prázdný.",
         "Transaction amount cannot be zero.": "Částka transakce nemůže být nulová.",
         "Please select a valid category.": "Prosím, vyberte platnou kategorii.",
+        "Bank Integration": "Bankovní integrace",
+        "Connect to Bank": "Připojit k bance",
+        "Add Bank Account": "Přidat bankovní účet",
     },
 }

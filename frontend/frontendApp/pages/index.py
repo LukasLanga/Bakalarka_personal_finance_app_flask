@@ -6,6 +6,7 @@ from ..components.transaction_modal import transaction_modal
 from ..components.account_modal import account_modal
 from ..components.manage_accounts_modal import manage_accounts_modal
 from ..components.invitation_modal import invitation_modal
+from ..components.add_bank_account_modal import add_bank_account_modal
 from ..styles import PRIMARY_COLOR
 from ..components.transaction_row import transaction_row
 
@@ -291,4 +292,5 @@ def index() -> rx.Component:
         account_modal(),
         manage_accounts_modal(),
         invitation_modal(),
+        add_bank_account_modal(),
     )

@@ -13,6 +13,7 @@ class User(db.Model, UserMixin):
     password_hash = db.Column(db.String(255), nullable=False)
 
     account_accesses = relationship("UserAccountAccess", back_populates="user")
+    psd2_connections = relationship("Psd2Connection", back_populates="user", cascade="all, delete-orphan")
 
     @property
     def password(self):

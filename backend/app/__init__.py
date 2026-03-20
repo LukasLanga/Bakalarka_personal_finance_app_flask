@@ -11,6 +11,7 @@ from backend.app.routes.dashboard_routes import dashboard_blueprint
 from backend.app.routes.category_routes import category_blueprint
 from backend.app.routes.transaction_routes import transaction_blueprint
 from backend.app.routes.sharing import bp as sharing_blueprint
+from backend.app.routes.kb_routes import kb_blueprint
 
 load_dotenv()
 
@@ -43,6 +44,7 @@ def create_app():
     app.register_blueprint(category_blueprint)
     app.register_blueprint(transaction_blueprint)
     app.register_blueprint(sharing_blueprint)
+    app.register_blueprint(kb_blueprint)
 
     return app
 

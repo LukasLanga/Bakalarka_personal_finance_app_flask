@@ -1,5 +1,6 @@
 import reflex as rx
 from ..state import BaseState, DashboardState
+from ..state.add_bank_account_state import AddBankAccountState
 from ..styles import PRIMARY_COLOR
 from ..models.models import Account
 
@@ -72,12 +73,11 @@ def sidebar() -> rx.Component:
             rx.hstack(
                 sidebar_user_profile(),
                 rx.spacer(),
-                # Close button for mobile
                 rx.icon(
                     "x",
                     size=24,
                     on_click=DashboardState.toggle_sidebar,
-                    display=["block", "block", "none", "none", "none"], # Visible only on mobile/tablet
+                    display=["block", "block", "none", "none", "none"],
                     cursor="pointer",
                 ),
                 width="100%",
@@ -117,6 +117,28 @@ def sidebar() -> rx.Component:
                 spacing="2",
                 width="100%",
             ),
+            rx.divider(),
+            rx.vstack(
+                rx.text(DashboardState.translations["Bank Integration"], font_weight="600", font_size="0.75em", letter_spacing="0.6px", text_transform="uppercase", color_scheme="gray"),
+                rx.cond(
+                    ~DashboardState.is_kb_connected,
+                    rx.button(
+                        DashboardState.translations["Connect to Bank"],
+                        on_click=DashboardState.connect_to_bank,
+                        loading=DashboardState.is_syncing,
+                        variant="outline",
+                        width="100%",
+                    ),
+                ),
+                rx.button(
+                    DashboardState.translations["Add Bank Account"],
+                    on_click=AddBankAccountState.open_modal,
+                    disabled=~DashboardState.is_kb_connected,
+                    width="100%",
+                ),
+                spacing="3",
+                width="100%",
+            ),
             rx.spacer(),
             rx.cond(
                 DashboardState.can_add_transaction,
@@ -141,9 +163,9 @@ def sidebar() -> rx.Component:
         left="0",
         z_index="100",
         display=[
-            rx.cond(DashboardState.is_sidebar_collapsed, "none", "block"), # Mobile
-            rx.cond(DashboardState.is_sidebar_collapsed, "none", "block"), # Tablet
-            "block", # Desktop
+            rx.cond(DashboardState.is_sidebar_collapsed, "none", "block"),
+            rx.cond(DashboardState.is_sidebar_collapsed, "none", "block"),
+            "block",
             "block",
             "block"
         ],

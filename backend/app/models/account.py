@@ -16,13 +16,13 @@ class Account(db.Model):
         cascade="all, delete-orphan"
     )
 
-    """
-    transactions = relationship(
-        "Transaction",
+    psd2_connection = relationship(
+        "Psd2Connection",
         back_populates="account",
+        uselist=False,
         cascade="all, delete-orphan"
     )
-    """
+
     def to_dict(self):
         return {
             'id': self.id,

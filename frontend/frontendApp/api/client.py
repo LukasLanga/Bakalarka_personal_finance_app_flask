@@ -4,6 +4,7 @@ from typing import List, Optional, Dict, Any
 from ..models.models import User, Account, DashboardSummary, Category, Transaction, Invitation, AccountUser
 
 API_URL = os.getenv("BACKEND_API_URL", "http://127.0.0.1:5000/api")
+ROOT_URL = API_URL.removesuffix("/api")
 
 # Use a client with a cookie jar to persist login sessions
 http_client = httpx.Client(base_url=API_URL, follow_redirects=True, cookies=httpx.Cookies())
@@ -230,5 +231,31 @@ def invite_user_to_account(account_id: int, email: str, role: str) -> bool:
 def get_user_roles() -> Dict[str, str]:
     """Fetches all roles for the current user."""
     response = http_client.get("/user-roles")
+    response.raise_for_status()
+    return response.json()
+
+# --- KB Bank Integration ---
+
+def get_kb_connection_status() -> bool:
+    """Checks if the user has a valid connection to KB bank."""
+    response = http_client.get(f"{ROOT_URL}/kb/connection-status")
+    response.raise_for_status()
+    return response.json().get("connected", False)
+
+def connect_to_kb_bank():
+    """Establishes the initial connection to the KB bank."""
+    response = http_client.post(f"{ROOT_URL}/kb/token")
+    response.raise_for_status()
+    return response.json()
+
+def get_available_kb_accounts() -> List[Dict[str, Any]]:
+    """Fetches bank accounts from KB that have not been added yet."""
+    response = http_client.get(f"{ROOT_URL}/kb/available-accounts")
+    response.raise_for_status()
+    return response.json()
+
+def sync_single_kb_account(kb_account_data: Dict[str, Any]):
+    """Triggers a sync for a single, specific KB account."""
+    response = http_client.post(f"{ROOT_URL}/kb/sync-single-account", json=kb_account_data, timeout=120)
     response.raise_for_status()
     return response.json()

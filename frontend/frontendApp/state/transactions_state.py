@@ -61,31 +61,37 @@ class TransactionsState(BaseState):
     async def set_search_query(self, value: str):
         self.search_query = value
         self.current_page = 1
-        return self.load_data
+        async for event in self.load_data():
+            yield event
 
     async def set_selected_account_filter(self, value: str):
         self.selected_account_filter = value
         self.current_page = 1
-        return self.load_data
+        async for event in self.load_data():
+            yield event
 
     async def set_selected_category_filter(self, value: str):
         self.selected_category_filter = value
         self.current_page = 1
-        return self.load_data
+        async for event in self.load_data():
+            yield event
 
     async def set_page(self, page: int):
         self.current_page = page
-        return self.load_data
+        async for event in self.load_data():
+            yield event
 
     async def next_page(self):
         if self.current_page < self.total_pages:
             self.current_page += 1
-            return self.load_data
+            async for event in self.load_data():
+                yield event
 
     async def prev_page(self):
         if self.current_page > 1:
             self.current_page -= 1
-            return self.load_data
+            async for event in self.load_data():
+                yield event
 
     async def load_data(self):
         async for event in self.check_auth():
