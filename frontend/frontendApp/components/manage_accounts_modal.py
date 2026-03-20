@@ -91,7 +91,8 @@ def edit_account_form() -> rx.Component:
                 ),
                 spacing="3",
                 width="100%",
-            )
+            ),
+            width="100%",
         ),
         # Members Card (visible to all)
         rx.card(
@@ -180,7 +181,8 @@ def edit_account_form() -> rx.Component:
                     ),
                     spacing="3",
                     width="100%",
-                )
+                ),
+                width="100%",
             )
         ),
         spacing="4",
@@ -241,7 +243,8 @@ def manage_accounts_modal() -> rx.Component:
                     ),
                     spacing="4",
                     width="100%",
-                )
+                ),
+                max_width="600px",
             ),
             open=DashboardState.show_manage_accounts_modal,
             on_open_change=DashboardState.handle_manage_modal_change,

@@ -15,31 +15,44 @@ def add_category_modal() -> rx.Component:
             rx.dialog.title(CategoriesState.translations["Add New Category"]),
             rx.dialog.description(
                 CategoriesState.translations["Enter the details for the new category."],
+                margin_bottom="16px",
             ),
             rx.vstack(
-                rx.text(CategoriesState.translations["Category Name"], weight="bold"),
-                rx.input(
-                    placeholder=CategoriesState.translations["e.g. Groceries"],
-                    value=CategoriesState.new_category_name,
-                    on_change=CategoriesState.set_new_category_name,
+                rx.vstack(
+                    rx.text(CategoriesState.translations["Category Name"], weight="bold"),
+                    rx.input(
+                        placeholder=CategoriesState.translations["e.g. Groceries"],
+                        value=CategoriesState.new_category_name,
+                        on_change=CategoriesState.set_new_category_name,
+                        width="100%",
+                    ),
+                    spacing="2",
+                    width="100%",
                 ),
-                rx.text(CategoriesState.translations["Category Type"], weight="bold"),
-                rx.segmented_control.root(
-                    rx.segmented_control.item(CategoriesState.translations["Expense"], value="Expense"),
-                    rx.segmented_control.item(CategoriesState.translations["Income"], value="Income"),
-                    value=CategoriesState.new_category_type,
-                    on_change=CategoriesState.set_new_category_type,
+                rx.vstack(
+                    rx.text(CategoriesState.translations["Category Type"], weight="bold"),
+                    rx.segmented_control.root(
+                        rx.segmented_control.item(CategoriesState.translations["Expense"], value="Expense"),
+                        rx.segmented_control.item(CategoriesState.translations["Income"], value="Income"),
+                        value=CategoriesState.new_category_type,
+                        on_change=CategoriesState.set_new_category_type,
+                        width="100%",
+                    ),
+                    spacing="2",
+                    width="100%",
+                ),
+                rx.flex(
+                    rx.dialog.close(
+                        rx.button(CategoriesState.translations["Cancel"], on_click=lambda: CategoriesState.toggle_add_category_modal(False), variant="soft", color_scheme="gray")
+                    ),
+                    rx.button(CategoriesState.translations["Add Category"], on_click=CategoriesState.create_category, color_scheme="green"),
+                    spacing="3",
+                    justify="end",
+                    margin_top="16px",
+                    width="100%",
                 ),
                 spacing="4",
-            ),
-            rx.flex(
-                rx.dialog.close(
-                    rx.button(CategoriesState.translations["Cancel"], on_click=lambda: CategoriesState.toggle_add_category_modal(False), variant="soft", color_scheme="gray")
-                ),
-                rx.button(CategoriesState.translations["Add Category"], on_click=CategoriesState.create_category, color_scheme="green"),
-                spacing="3",
-                justify="end",
-                margin_top="16px",
+                width="100%",
             ),
         ),
         open=CategoriesState.show_add_category_modal,
@@ -98,7 +111,7 @@ def categories() -> rx.Component:
                                 CategoriesState.filtered_categories,
                                 lambda cat: rx.table.row(
                                     rx.table.cell(cat.name),
-                                    rx.table.cell(rx.badge(cat.type.capitalize(), color_scheme=rx.cond(cat.type == "income", "blue", "red"))),
+                                    rx.table.cell(rx.badge(CategoriesState.translations[cat.type.capitalize()], color_scheme=rx.cond(cat.type == "income", "blue", "red"))),
                                     rx.table.cell(cat.usage_count),
                                     rx.table.cell(
                                         rx.button(
