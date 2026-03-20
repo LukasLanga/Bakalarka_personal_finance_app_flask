@@ -18,6 +18,7 @@ class ManageAccountsState(BaseState):
     # Invitation form state
     invite_email: str = ""
     invite_role: str = "viewer"
+    invitation_sent_message: str = ""
     
     show_delete_confirmation: bool = False
     account_to_delete_id: int | None = None
@@ -50,6 +51,7 @@ class ManageAccountsState(BaseState):
 
     def set_invite_email(self, value: str):
         self.invite_email = value
+        self.invitation_sent_message = ""
 
     def set_invite_role(self, value: str):
         self.invite_role = value
@@ -72,6 +74,7 @@ class ManageAccountsState(BaseState):
         self.invite_email = ""
         self.invite_role = "viewer"
         self.error_message = ""
+        self.invitation_sent_message = ""
 
     def open_delete_confirmation(self, account_id: int):
         self.show_delete_confirmation = True
@@ -135,6 +138,7 @@ class ManageAccountsState(BaseState):
     async def invite_user(self):
         if not self.invite_email:
             self.error_message = "Email cannot be empty."
+            self.invitation_sent_message = ""
             return
         try:
             client.invite_user_to_account(
@@ -142,6 +146,9 @@ class ManageAccountsState(BaseState):
                 email=self.invite_email,
                 role=self.invite_role,
             )
-            self.invite_email = "" # Clear email after sending
+            self.invitation_sent_message = f"Invitation successfully sent to {self.invite_email}."
+            self.invite_email = ""
+            self.error_message = ""
         except Exception as e:
             self.error_message = f"Failed to send invitation: {e}"
+            self.invitation_sent_message = ""

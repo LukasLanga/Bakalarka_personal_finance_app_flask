@@ -149,6 +149,15 @@ def edit_account_form() -> rx.Component:
                         spacing="3",
                         width="100%",
                     ),
+                    rx.cond(
+                        ManageAccountsState.invitation_sent_message != "",
+                        rx.callout.root(
+                            rx.callout.icon(rx.icon("check_check")),
+                            rx.callout.text(ManageAccountsState.invitation_sent_message),
+                            color_scheme="green",
+                            margin_top="12px",
+                        ),
+                    ),
                     spacing="4",
                     width="100%",
                 ),
