@@ -185,10 +185,14 @@ def update_user_role(account_id, user_id):
     if not new_role or new_role not in [role.value for role in AccountRole]:
         return jsonify({"message": "Invalid role specified."}), 400
 
+    target_user_role_query = text("SELECT role FROM user_account_access WHERE user_id = :user_id AND account_id = :account_id")
+    target_role = db.session.execute(target_user_role_query, {"user_id": user_id, "account_id": account_id}).scalar()
+
+    if target_role == AccountRole.OWNER.value:
+        return jsonify({"message": "The owner's role cannot be changed."}), 403
+
     # Owners cannot have their role changed by others.
     if g.user_role == AccountRole.MANAGER:
-        target_user_role_query = text("SELECT role FROM user_account_access WHERE user_id = :user_id AND account_id = :account_id")
-        target_role = db.session.execute(target_user_role_query, {"user_id": user_id, "account_id": account_id}).scalar()
         if target_role == AccountRole.OWNER.value:
             return jsonify({"message": "Managers cannot change the role of an owner."}), 403
 
