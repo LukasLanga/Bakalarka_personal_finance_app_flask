@@ -16,7 +16,6 @@ def invitation_detail_row(title: str, value: str) -> rx.Component:
     return rx.flex(
         rx.text(
             DashboardState.translations[title],
-            color_scheme="gray",
             size="2",
             weight="medium",
         ),
@@ -29,8 +28,9 @@ def invitation_detail_row(title: str, value: str) -> rx.Component:
         justify="between",
         width="100%",
         padding_y="10px",
-        border_bottom="1px solid #F1F5F9",
+        border_bottom=f"1px solid {rx.color('gray', 5)}",
     )
+
 def invitation_modal() -> rx.Component:
     """A modal to display invitation details and actions."""
     return rx.dialog.root(
@@ -46,9 +46,8 @@ def invitation_modal() -> rx.Component:
                         rx.text(
                             DashboardState.translations[get_role_description(DashboardState.selected_invitation.role)],
                             size="2",
-                            color_scheme="gray",
                         ),
-                        bg_color="#F8FAFC",
+                        bg_color=rx.color("gray", 3),
                         padding="12px",
                         border_radius="8px",
                         margin_top="10px",
