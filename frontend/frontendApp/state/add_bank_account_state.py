@@ -43,7 +43,7 @@ class AddBankAccountState(BaseState):
         self.is_loading = True
         yield
         try:
-            self.available_accounts = client.get_available_kb_accounts()
+            self.available_accounts = client.get_available_kb_accounts(self.get_http_client())
         except Exception as e:
             self.error_message = f"Failed to fetch accounts: {e}"
         finally:
@@ -69,7 +69,7 @@ class AddBankAccountState(BaseState):
         yield
 
         try:
-            client.sync_single_kb_account(selected_account_data)
+            client.sync_single_kb_account(self.get_http_client(), selected_account_data)
             self.show_modal = False
             
             dashboard_state = await self.get_state(DashboardState)

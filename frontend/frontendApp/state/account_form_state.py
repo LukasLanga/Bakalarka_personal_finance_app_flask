@@ -37,6 +37,7 @@ class AccountFormState(BaseState):
                 return
 
             client.create_account(
+                self.get_http_client(),
                 name=self.name,
                 bank_name=self.bank_name,
                 balance=self.balance,

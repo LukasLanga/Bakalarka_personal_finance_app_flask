@@ -42,8 +42,8 @@ class RegisterState(BaseState):
             return
         self.is_loading = True
         try:
-            if client.register(self.username, self.email, self.password):
-                if client.login(self.email, self.password):
+            if client.register(self.get_http_client(), self.username, self.email, self.password):
+                if client.login(self.get_http_client(), self.email, self.password):
                     yield rx.redirect("/")
         except httpx.HTTPStatusError as e:
             try:

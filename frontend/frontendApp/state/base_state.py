@@ -3,12 +3,25 @@ from ..models.models import User
 from ..api import client
 import httpx
 from ..locale import TRANSLATIONS
+from ..api.client import API_URL
+
+_session_clients = {}
 
 class BaseState(rx.State):
     """Global state for authentication."""
     is_authenticated: bool = False
     logged_in_user: User | None = None
     locale: str = "en"
+
+    def get_http_client(self) -> httpx.Client:
+        """
+        Returns a session-specific httpx client.
+        Uses the session token to get/create a client from a global store.
+        """
+        token = self.router.session.client_token
+        if token not in _session_clients:
+            _session_clients[token] = httpx.Client(base_url=API_URL, follow_redirects=True)
+        return _session_clients[token]
 
     @rx.var
     def translations(self) -> dict:
@@ -20,7 +33,7 @@ class BaseState(rx.State):
         public_routes = {"/login", "/register"}
         try:
             if not self.is_authenticated:
-                self.logged_in_user = client.get_current_user()
+                self.logged_in_user = client.get_current_user(self.get_http_client())
             self.is_authenticated = True
         except (httpx.HTTPStatusError, Exception):
             self.is_authenticated = False
@@ -33,6 +46,18 @@ class BaseState(rx.State):
         return rx.redirect(self.router.page.raw_path)
 
     def logout(self):
-        self.is_authenticated = False
-        self.logged_in_user = None
-        return rx.redirect("/login")
+        token = self.router.session.client_token
+        try:
+            client.logout(self.get_http_client())
+        except Exception as e:
+            print(f"Error during backend logout: {e}")
+        finally:
+            self.is_authenticated = False
+            self.logged_in_user = None
+            
+            # Clean up the client from the global store
+            if token in _session_clients:
+                _session_clients[token].close()
+                del _session_clients[token]
+
+            return rx.redirect("/login")

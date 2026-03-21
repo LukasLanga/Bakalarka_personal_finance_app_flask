@@ -6,52 +6,54 @@ from ..models.models import User, Account, DashboardSummary, Category, Transacti
 API_URL = os.getenv("BACKEND_API_URL", "http://127.0.0.1:5000/api")
 ROOT_URL = API_URL.removesuffix("/api")
 
-# Use a client with a cookie jar to persist login sessions
-http_client = httpx.Client(base_url=API_URL, follow_redirects=True, cookies=httpx.Cookies())
 
-
-def login(email: str, password: str) -> bool:
+def login(client: httpx.Client, email: str, password: str) -> bool:
     """
     Attempts to log in the user by calling the backend API.
     """
-    response = http_client.post("/login", json={"email": email, "password": password})
+    response = client.post("/login", json={"email": email, "password": password})
     response.raise_for_status()
     return True
 
+def logout(client: httpx.Client):
+    """Logs the user out by calling the backend API."""
+    response = client.post("/logout")
+    response.raise_for_status()
+    return True
 
-def register(username: str, email: str, password: str) -> bool:
+def register(client: httpx.Client, username: str, email: str, password: str) -> bool:
     """
     Registers a new user by calling the backend API.
     """
-    response = http_client.post("/register", json={"username": username, "email": email, "password": password})
+    response = client.post("/register", json={"username": username, "email": email, "password": password})
     response.raise_for_status()
     return True
 
 
-def get_current_user() -> User:
+def get_current_user(client: httpx.Client) -> User:
     """
     Checks with the backend to see who is currently logged in.
     """
-    response = http_client.get("/me")
+    response = client.get("/me")
     response.raise_for_status()
     return User(**response.json())
 
 
-def get_accounts() -> List[Account]:
+def get_accounts(client: httpx.Client) -> List[Account]:
     """Fetches all accounts for the current user."""
-    response = http_client.get("/accounts")
+    response = client.get("/accounts")
     response.raise_for_status()
     return [Account(**acc) for acc in response.json()]
 
 
-def list_categories() -> List[Category]:
+def list_categories(client: httpx.Client) -> List[Category]:
     """Fetches all categories for the current user."""
-    response = http_client.get("/listCategories")
+    response = client.get("/listCategories")
     response.raise_for_status()
     return [Category(**cat) for cat in response.json()]
 
 
-def get_dashboard_summary(account_id: Optional[int] = None, year: Optional[int] = None, month: Optional[int] = None) -> DashboardSummary:
+def get_dashboard_summary(client: httpx.Client, account_id: Optional[int] = None, year: Optional[int] = None, month: Optional[int] = None) -> DashboardSummary:
     """Fetches the dashboard summary data."""
     params = {}
     if account_id:
@@ -60,22 +62,22 @@ def get_dashboard_summary(account_id: Optional[int] = None, year: Optional[int] 
         params["year"] = year
     if month:
         params["month"] = month
-    response = http_client.get("/dashboardSummary", params=params)
+    response = client.get("/dashboardSummary", params=params)
     response.raise_for_status()
     return DashboardSummary(**response.json())
 
 
-def get_yearly_overview(account_id: Optional[int] = None) -> List[Dict[str, Any]]:
+def get_yearly_overview(client: httpx.Client, account_id: Optional[int] = None) -> List[Dict[str, Any]]:
     """Fetches the income and expenses for the last 12 months."""
     params = {}
     if account_id:
         params["account_id"] = account_id
-    response = http_client.get("/yearly-overview", params=params)
+    response = client.get("/yearly-overview", params=params)
     response.raise_for_status()
     return response.json()
 
 
-def create_transaction(name: str, amount: float, date: str, description: Optional[str], account_id: int, category_id: Optional[int], currency: str = "EUR"):
+def create_transaction(client: httpx.Client, name: str, amount: float, date: str, description: Optional[str], account_id: int, category_id: Optional[int], currency: str = "EUR"):
     payload = {
         "name": name,
         "amount": amount,
@@ -86,7 +88,7 @@ def create_transaction(name: str, amount: float, date: str, description: Optiona
         "currency": currency,
     }
     try:
-        response = http_client.post("/createTransaction", json=payload)
+        response = client.post("/createTransaction", json=payload)
         response.raise_for_status()
         return True
     except httpx.HTTPStatusError as e:
@@ -94,7 +96,7 @@ def create_transaction(name: str, amount: float, date: str, description: Optiona
             raise Exception("You do not have permission to add transactions to this account.")
         raise e
 
-def update_transaction(transaction_id: int, account_id: int, name: Optional[str] = None, amount: Optional[float] = None, date: Optional[str] = None, description: Optional[str] = None, category_id: Optional[int] = None):
+def update_transaction(client: httpx.Client, transaction_id: int, account_id: int, name: Optional[str] = None, amount: Optional[float] = None, date: Optional[str] = None, description: Optional[str] = None, category_id: Optional[int] = None):
     payload = {
         "transaction_id": transaction_id,
         "account_id": account_id,
@@ -107,23 +109,23 @@ def update_transaction(transaction_id: int, account_id: int, name: Optional[str]
     # Remove None values
     payload = {k: v for k, v in payload.items() if v is not None}
     
-    response = http_client.post("/updateTransaction", json=payload)
+    response = client.post("/updateTransaction", json=payload)
     response.raise_for_status()
     return Transaction(**response.json())
 
-def delete_transaction(account_id: int, transaction_id: int) -> bool:
+def delete_transaction(client: httpx.Client, account_id: int, transaction_id: int) -> bool:
     """Deletes a transaction."""
-    response = http_client.post("/deleteTransaction", json={"account_id": account_id, "transaction_id": transaction_id})
+    response = client.post("/deleteTransaction", json={"account_id": account_id, "transaction_id": transaction_id})
     response.raise_for_status()
     return True
 
-def get_transaction(account_id: int, transaction_id: int) -> Transaction:
+def get_transaction(client: httpx.Client, account_id: int, transaction_id: int) -> Transaction:
     """Fetches a single transaction."""
-    response = http_client.get("/getTransaction", params={"account_id": account_id, "transaction_id": transaction_id})
+    response = client.get("/getTransaction", params={"account_id": account_id, "transaction_id": transaction_id})
     response.raise_for_status()
     return Transaction(**response.json())
 
-def get_all_transactions(page: int = 1, per_page: int = 10, search_query: Optional[str] = None, account_id: Optional[int] = None, category_id: Optional[int] = None) -> Dict[str, Any]:
+def get_all_transactions(client: httpx.Client, page: int = 1, per_page: int = 10, search_query: Optional[str] = None, account_id: Optional[int] = None, category_id: Optional[int] = None) -> Dict[str, Any]:
     """Fetches all transactions for the current user."""
     params = {"page": page, "per_page": per_page}
     if search_query:
@@ -133,13 +135,13 @@ def get_all_transactions(page: int = 1, per_page: int = 10, search_query: Option
     if category_id:
         params["category_id"] = category_id
 
-    response = http_client.get("/getAllTransactions", params=params)
+    response = client.get("/getAllTransactions", params=params)
     response.raise_for_status()
     data = response.json()
     data["transactions"] = [Transaction(**t) for t in data["transactions"]]
     return data
 
-def create_account(name: str, bank_name: str, balance: float, currency: str = "EUR"):
+def create_account(client: httpx.Client, name: str, bank_name: str, balance: float, currency: str = "EUR"):
     """Creates a new account."""
     payload = {
         "name": name,
@@ -147,11 +149,11 @@ def create_account(name: str, bank_name: str, balance: float, currency: str = "E
         "balance": balance,
         "currency": currency,
     }
-    response = http_client.post("/createAccount", json=payload)
+    response = client.post("/createAccount", json=payload)
     response.raise_for_status()
     return True
 
-def update_account(account_id: int, name: Optional[str] = None, bank_name: Optional[str] = None, currency: Optional[str] = None):
+def update_account(client: httpx.Client, account_id: int, name: Optional[str] = None, bank_name: Optional[str] = None, currency: Optional[str] = None):
     """Updates an existing account."""
     payload = {
         "account_id": account_id,
@@ -161,101 +163,101 @@ def update_account(account_id: int, name: Optional[str] = None, bank_name: Optio
     }
     payload = {k: v for k, v in payload.items() if v is not None}
     
-    response = http_client.post("/updateAccount", json=payload)
+    response = client.post("/updateAccount", json=payload)
     response.raise_for_status()
     return Account(**response.json())
 
-def delete_account(account_id: int) -> bool:
+def delete_account(client: httpx.Client, account_id: int) -> bool:
     """Deletes an account."""
-    response = http_client.post("/deleteAccount", json={"account_id": account_id})
+    response = client.post("/deleteAccount", json={"account_id": account_id})
     response.raise_for_status()
     return True
 
-def create_category(name: str, type: str) -> bool:
+def create_category(client: httpx.Client, name: str, type: str) -> bool:
     """Creates a new category."""
     payload = {"name": name, "type": type}
-    response = http_client.post("/createCategory", json=payload)
+    response = client.post("/createCategory", json=payload)
     response.raise_for_status()
     return True
 
-def delete_category(name: str) -> bool:
+def delete_category(client: httpx.Client, name: str) -> bool:
     """Deletes a category."""
     payload = {"name": name}
-    response = http_client.post("/deleteCategory", json=payload)
+    response = client.post("/deleteCategory", json=payload)
     response.raise_for_status()
     return True
 
-def get_pending_invitations() -> List[Invitation]:
+def get_pending_invitations(client: httpx.Client) -> List[Invitation]:
     """Fetches all pending invitations for the current user."""
-    response = http_client.get("/invitations/pending")
+    response = client.get("/invitations/pending")
     response.raise_for_status()
     return [Invitation(**inv) for inv in response.json()]
 
-def accept_invitation(token: str) -> bool:
+def accept_invitation(client: httpx.Client, token: str) -> bool:
     """Accepts an invitation."""
-    response = http_client.post("/invitations/accept", json={"token": token})
+    response = client.post("/invitations/accept", json={"token": token})
     response.raise_for_status()
     return True
 
-def decline_invitation(token: str) -> bool:
+def decline_invitation(client: httpx.Client, token: str) -> bool:
     """Declines an invitation."""
-    response = http_client.post("/invitations/decline", json={"token": token})
+    response = client.post("/invitations/decline", json={"token": token})
     response.raise_for_status()
     return True
 
-def get_account_users(account_id: int) -> List[AccountUser]:
+def get_account_users(client: httpx.Client, account_id: int) -> List[AccountUser]:
     """Fetches all users for a specific account."""
-    response = http_client.get(f"/accounts/{account_id}/users")
+    response = client.get(f"/accounts/{account_id}/users")
     response.raise_for_status()
     return [AccountUser(**user) for user in response.json()]
 
-def update_user_role(account_id: int, user_id: int, role: str) -> bool:
+def update_user_role(client: httpx.Client, account_id: int, user_id: int, role: str) -> bool:
     """Updates a user's role on an account."""
-    response = http_client.put(f"/accounts/{account_id}/users/{user_id}", json={"role": role})
+    response = client.put(f"/accounts/{account_id}/users/{user_id}", json={"role": role})
     response.raise_for_status()
     return True
 
-def remove_user_from_account(account_id: int, user_id: int) -> bool:
+def remove_user_from_account(client: httpx.Client, account_id: int, user_id: int) -> bool:
     """Removes a user from an account."""
-    response = http_client.delete(f"/accounts/{account_id}/users/{user_id}")
+    response = client.delete(f"/accounts/{account_id}/users/{user_id}")
     response.raise_for_status()
     return True
 
-def invite_user_to_account(account_id: int, email: str, role: str) -> bool:
+def invite_user_to_account(client: httpx.Client, account_id: int, email: str, role: str) -> bool:
     """Invites a user to an account."""
     payload = {"invited_email": email, "role": role}
-    response = http_client.post(f"/accounts/{account_id}/invitations", json=payload)
+    response = client.post(f"/accounts/{account_id}/invitations", json=payload)
     response.raise_for_status()
     return True
 
-def get_user_roles() -> Dict[str, str]:
+def get_user_roles(client: httpx.Client) -> Dict[str, str]:
     """Fetches all roles for the current user."""
-    response = http_client.get("/user-roles")
+    response = client.get("/user-roles")
     response.raise_for_status()
     return response.json()
 
 # --- KB Bank Integration ---
 
-def get_kb_connection_status() -> bool:
+def get_kb_connection_status(client: httpx.Client) -> bool:
     """Checks if the user has a valid connection to KB bank."""
-    response = http_client.get(f"{ROOT_URL}/kb/connection-status")
+    response = client.get(f"{ROOT_URL}/kb/connection-status")
     response.raise_for_status()
     return response.json().get("connected", False)
 
-def connect_to_kb_bank():
+def connect_to_kb_bank(client: httpx.Client):
     """Establishes the initial connection to the KB bank."""
-    response = http_client.post(f"{ROOT_URL}/kb/token")
+    response = client.post(f"{ROOT_URL}/kb/token")
     response.raise_for_status()
     return response.json()
 
-def get_available_kb_accounts() -> List[Dict[str, Any]]:
+def get_available_kb_accounts(client: httpx.Client) -> List[Dict[str, Any]]:
     """Fetches bank accounts from KB that have not been added yet."""
-    response = http_client.get(f"{ROOT_URL}/kb/available-accounts")
+    response = client.get(f"{ROOT_URL}/kb/available-accounts")
     response.raise_for_status()
     return response.json()
 
-def sync_single_kb_account(kb_account_data: Dict[str, Any]):
+def sync_single_kb_account(client: httpx.Client, kb_account_data: Dict[str, Any]):
     """Triggers a sync for a single, specific KB account."""
-    response = http_client.post(f"{ROOT_URL}/kb/sync-single-account", json=kb_account_data, timeout=120)
+    response = client.post(f"{ROOT_URL}/kb/sync-single-account", json=kb_account_data, timeout=120)
     response.raise_for_status()
     return response.json()

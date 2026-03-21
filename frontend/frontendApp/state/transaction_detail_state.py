@@ -61,23 +61,23 @@ class TransactionDetailState(BaseState):
                 self.error_message = "Missing transaction or account ID."
                 return
 
-            self.transaction = client.get_transaction(account_id, transaction_id)
+            self.transaction = client.get_transaction(self.get_http_client(), account_id, transaction_id)
             
             # Fetch account name
-            accounts = client.get_accounts()
+            accounts = client.get_accounts(self.get_http_client())
             account = next((acc for acc in accounts if acc.id == account_id), None)
             self.account_name = account.name if account else "Unknown Account"
 
             # Fetch category name
             if self.transaction.category_id:
-                categories = client.list_categories()
+                categories = client.list_categories(self.get_http_client())
                 category = next((cat for cat in categories if cat.id == self.transaction.category_id), None)
                 self.category_name = category.name if category else "Uncategorized"
             else:
                 self.category_name = "Uncategorized"
 
             # Fetch user role for this account
-            users = client.get_account_users(account_id)
+            users = client.get_account_users(self.get_http_client(), account_id)
             current_user_access = next((u for u in users if u.id == self.logged_in_user.id), None)
             if current_user_access:
                 self.current_user_role = current_user_access.role
@@ -133,11 +133,12 @@ class TransactionDetailState(BaseState):
                 self.is_loading = False
                 return
 
-            categories = client.list_categories()
+            categories = client.list_categories(self.get_http_client())
             selected_category = next((cat for cat in categories if cat.name == self.edit_category_name), None)
             category_id = selected_category.id if selected_category else None
 
             updated_transaction = client.update_transaction(
+                self.get_http_client(),
                 transaction_id=self.transaction.id,
                 account_id=self.transaction.account_id,
                 name=self.edit_name,
@@ -164,7 +165,7 @@ class TransactionDetailState(BaseState):
 
         self.is_loading = True
         try:
-            client.delete_transaction(self.transaction.account_id, self.transaction.id)
+            client.delete_transaction(self.get_http_client(), self.transaction.account_id, self.transaction.id)
             return [DashboardState.load_dashboard_summary, rx.redirect("/")]
         except Exception as e:
             self.error_message = f"Failed to delete transaction: {e}"

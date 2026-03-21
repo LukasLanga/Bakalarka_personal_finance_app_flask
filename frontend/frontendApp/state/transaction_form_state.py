@@ -94,6 +94,7 @@ class TransactionFormState(BaseState):
                 return
 
             client.create_transaction(
+                self.get_http_client(),
                 account_id=selected_account_id_int,
                 category_id=get_id(selected_category),
                 name=self.name,

@@ -88,13 +88,14 @@ class ManageAccountsState(BaseState):
         if not self.account_to_edit:
             return
         try:
-            self.account_users = client.get_account_users(self.account_to_edit.id)
+            self.account_users = client.get_account_users(self.get_http_client(), self.account_to_edit.id)
         except Exception as e:
             self.error_message = f"Failed to load users: {e}"
 
     async def save_changes(self):
         try:
             client.update_account(
+                self.get_http_client(),
                 account_id=self.account_to_edit.id,
                 name=self.edit_name,
                 bank_name=self.edit_bank_name,
@@ -107,7 +108,7 @@ class ManageAccountsState(BaseState):
 
     async def delete_account(self):
         try:
-            client.delete_account(self.account_to_delete_id)
+            client.delete_account(self.get_http_client(), self.account_to_delete_id)
             self.close_delete_confirmation()
             return [DashboardState.load_accounts, DashboardState.load_dashboard_summary]
         except Exception as e:
@@ -115,7 +116,7 @@ class ManageAccountsState(BaseState):
 
     async def update_user_role(self, user_id: int, role: str):
         try:
-            client.update_user_role(self.account_to_edit.id, user_id, role)
+            client.update_user_role(self.get_http_client(), self.account_to_edit.id, user_id, role)
             await self.load_account_users()
         except Exception as e:
             self.error_message = f"Failed to update role: {e}"
@@ -123,7 +124,7 @@ class ManageAccountsState(BaseState):
     async def remove_user(self, user_id: int):
         try:
             is_self_removal = user_id == self.logged_in_user.id
-            client.remove_user_from_account(self.account_to_edit.id, user_id)
+            client.remove_user_from_account(self.get_http_client(), self.account_to_edit.id, user_id)
             
             if is_self_removal:
                 # If user removes themselves, close the modal and refresh accounts
@@ -142,6 +143,7 @@ class ManageAccountsState(BaseState):
             return
         try:
             client.invite_user_to_account(
+                self.get_http_client(),
                 account_id=self.account_to_edit.id,
                 email=self.invite_email,
                 role=self.invite_role,

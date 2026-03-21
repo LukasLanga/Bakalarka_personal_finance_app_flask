@@ -36,7 +36,7 @@ class CategoriesState(BaseState):
 
         self.is_loading = True
         try:
-            self.categories = client.list_categories()
+            self.categories = client.list_categories(self.get_http_client())
         except Exception as e:
             self.error_message = f"Error loading categories: {e}"
         finally:
@@ -73,7 +73,7 @@ class CategoriesState(BaseState):
             return
 
         try:
-            client.create_category(self.new_category_name, self.new_category_type.lower())
+            client.create_category(self.get_http_client(), self.new_category_name, self.new_category_type.lower())
             self.toggle_add_category_modal(False)
             await self.load_categories()
         except Exception as e:
@@ -81,7 +81,7 @@ class CategoriesState(BaseState):
 
     async def delete_category(self):
         try:
-            client.delete_category(self.category_to_delete_name)
+            client.delete_category(self.get_http_client(), self.category_to_delete_name)
             self.close_delete_confirmation()
             await self.load_categories()
         except Exception as e:

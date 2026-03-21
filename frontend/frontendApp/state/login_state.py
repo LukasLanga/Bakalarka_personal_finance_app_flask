@@ -27,7 +27,7 @@ class LoginState(BaseState):
             return
         self.is_loading = True
         try:
-            if client.login(self.email, self.password):
+            if client.login(self.get_http_client(), self.email, self.password):
                 yield rx.redirect("/")
         except httpx.HTTPStatusError:
             self.error_message = "Invalid email or password."

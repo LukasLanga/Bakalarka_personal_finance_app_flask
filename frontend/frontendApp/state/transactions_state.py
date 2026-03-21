@@ -104,8 +104,8 @@ class TransactionsState(BaseState):
         yield
 
         try:
-            accounts = client.get_accounts()
-            categories = client.list_categories()
+            accounts = client.get_accounts(self.get_http_client())
+            categories = client.list_categories(self.get_http_client())
 
             all_accounts_str = self.translations.get("All Accounts", "All Accounts")
             all_categories_str = self.translations.get("All Categories", "All Categories")
@@ -128,6 +128,7 @@ class TransactionsState(BaseState):
                     category_id = selected_cat.id
 
             data = client.get_all_transactions(
+                self.get_http_client(),
                 page=self.current_page,
                 search_query=self.search_query,
                 account_id=account_id,

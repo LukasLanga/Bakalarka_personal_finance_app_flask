@@ -215,7 +215,7 @@ class DashboardState(BaseState):
 
     async def load_accounts(self):
         try:
-            self.accounts = client.get_accounts()
+            self.accounts = client.get_accounts(self.get_http_client())
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 401:
                 self.is_authenticated = False
@@ -227,19 +227,20 @@ class DashboardState(BaseState):
 
     def load_user_roles(self):
         try:
-            self.user_roles = client.get_user_roles()
+            self.user_roles = client.get_user_roles(self.get_http_client())
         except Exception as e:
             print(f"Error loading user roles: {e}")
 
     def load_categories(self):
         try:
-            self.categories = client.list_categories()
+            self.categories = client.list_categories(self.get_http_client())
         except Exception as e:
             print(f"Error loading categories: {e}")
 
     def load_dashboard_summary(self):
         try:
             self.dashboard_summary = client.get_dashboard_summary(
+                self.get_http_client(),
                 account_id=self.selected_account_id,
                 year=self.selected_year,
                 month=self.selected_month,
@@ -249,13 +250,13 @@ class DashboardState(BaseState):
 
     def load_yearly_overview(self):
         try:
-            self.yearly_overview = client.get_yearly_overview(account_id=self.selected_account_id)
+            self.yearly_overview = client.get_yearly_overview(self.get_http_client(), account_id=self.selected_account_id)
         except Exception as e:
             print(f"Error loading yearly overview: {e}")
 
     def load_pending_invitations(self):
         try:
-            self.pending_invitations = client.get_pending_invitations()
+            self.pending_invitations = client.get_pending_invitations(self.get_http_client())
         except Exception as e:
             print(f"Error loading invitations: {e}")
 
@@ -263,7 +264,7 @@ class DashboardState(BaseState):
         if not self.selected_invitation:
             return
         try:
-            client.accept_invitation(self.selected_invitation.token)
+            client.accept_invitation(self.get_http_client(), self.selected_invitation.token)
             self.set_show_invitation_modal(False)
             self.load_pending_invitations()
             async for event in self.load_accounts():
@@ -273,7 +274,7 @@ class DashboardState(BaseState):
 
     async def decline_invitation(self, token: str):
         try:
-            client.decline_invitation(token)
+            client.decline_invitation(self.get_http_client(), token)
             self.load_pending_invitations()
             yield
         except Exception as e:
@@ -285,7 +286,7 @@ class DashboardState(BaseState):
     # --- Bank Integration Event Handlers ---
     def load_kb_connection_status(self):
         try:
-            self.is_kb_connected = client.get_kb_connection_status()
+            self.is_kb_connected = client.get_kb_connection_status(self.get_http_client())
         except Exception:
             self.is_kb_connected = False
 
@@ -293,7 +294,7 @@ class DashboardState(BaseState):
         self.is_syncing = True
         self.error_message = ""
         try:
-            client.connect_to_kb_bank()
+            client.connect_to_kb_bank(self.get_http_client())
             self.is_kb_connected = True
         except httpx.HTTPStatusError as e:
             self.error_message = f"Failed to connect: {e.response.status_code} - {e.response.text}"
