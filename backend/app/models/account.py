@@ -8,7 +8,7 @@ class Account(db.Model):
     name = db.Column(db.String(100), nullable=False)
     bank_name = db.Column(db.String(100), nullable=True)
     balance = db.Column(db.Numeric(12, 2), nullable=False)
-    currency = db.Column(db.String(10), nullable=False)
+    currency = db.Column(db.String(10), nullable=False, default='EUR')
 
     accesses = relationship(
         "UserAccountAccess",

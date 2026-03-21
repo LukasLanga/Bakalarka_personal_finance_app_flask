@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify, g
 from flask_login import login_required, current_user
 from sqlalchemy import text
 from ..services.auth_service import requires_role, get_user_role
-from ..models.invitation import AccountRole
+from ..models.invitation import AccountRole, AccountInvitation, InvitationStatus
 from ..db import db
 import secrets
 from datetime import datetime, timedelta
@@ -46,24 +46,23 @@ def invite_user(account_id):
     expires_at = datetime.now() + timedelta(days=7)
 
     query = text("""
-        INSERT INTO account_invitations (account_id, invited_by_user_id, invited_email, role, token, expires_at)
-        VALUES (:account_id, :user_id, :email, :role, :token, :expires_at)
-        RETURNING id;
+        INSERT INTO account_invitations (account_id, invited_by_user_id, invited_email, role, token, expires_at, status)
+        VALUES (:account_id, :user_id, :email, :role, :token, :expires_at, :status)
     """)
     
-    result = db.session.execute(query, {
+    db.session.execute(query, {
         "account_id": account_id,
         "user_id": current_user.id,
         "email": invited_email,
         "role": role,
         "token": token,
-        "expires_at": expires_at
-    }).fetchone()
+        "expires_at": expires_at,
+        "status": "pending"
+    })
     
-    invitation_id = result[0]
     db.session.commit()
-
-    return jsonify({"message": "Invitation sent successfully.", "invitation_id": invitation_id, "token": token}), 201
+    
+    return jsonify({"message": "Invitation sent successfully.", "token": token}), 201
 
 @bp.route('/api/invitations/accept', methods=['POST'])
 @login_required
@@ -73,21 +72,18 @@ def accept_invitation():
     if not token:
         return jsonify({"message": "Invitation token is required."}), 400
 
-    query = text("SELECT id, account_id, invited_email, role, status, expires_at FROM account_invitations WHERE token = :token")
-    invitation = db.session.execute(query, {"token": token}).fetchone()
+    invitation = AccountInvitation.query.filter_by(token=token).first()
 
     if not invitation:
         return jsonify({"message": "Invalid or expired invitation token."}), 404
 
-    inv_id, acc_id, inv_email, role, status, expires_at = invitation
-
-    if datetime.now() > expires_at:
+    if datetime.now() > invitation.expires_at:
         return jsonify({"message": "Invitation has expired."}), 410
     
-    if status != 'pending':
-        return jsonify({"message": f"This invitation has already been {status}."}), 409
+    if invitation.status != InvitationStatus.PENDING.value:
+        return jsonify({"message": f"This invitation has already been {invitation.status}."}), 409
 
-    if inv_email != current_user.email.lower():
+    if invitation.invited_email != current_user.email.lower():
         return jsonify({"message": "This invitation is for a different user."}), 403
 
     insert_query = text("""
@@ -95,12 +91,11 @@ def accept_invitation():
         VALUES (:user_id, :account_id, :role)
         ON CONFLICT (user_id, account_id) DO UPDATE SET role = EXCLUDED.role;
     """)
-    db.session.execute(insert_query, {"user_id": current_user.id, "account_id": acc_id, "role": role})
+    db.session.execute(insert_query, {"user_id": current_user.id, "account_id": invitation.account_id, "role": invitation.role})
 
-    update_query = text("UPDATE account_invitations SET status = 'accepted' WHERE id = :inv_id")
-    db.session.execute(update_query, {"inv_id": inv_id})
-
+    invitation.status = InvitationStatus.ACCEPTED.value
     db.session.commit()
+    
     return jsonify({"message": "Invitation accepted successfully."}), 200
 
 @bp.route('/api/invitations/decline', methods=['POST'])
@@ -111,22 +106,18 @@ def decline_invitation():
     if not token:
         return jsonify({"message": "Invitation token is required."}), 400
 
-    query = text("SELECT id, invited_email, status FROM account_invitations WHERE token = :token")
-    invitation = db.session.execute(query, {"token": token}).fetchone()
+    invitation = AccountInvitation.query.filter_by(token=token).first()
 
     if not invitation:
         return jsonify({"message": "Invalid invitation token."}), 404
     
-    inv_id, inv_email, status = invitation
-
-    if inv_email != current_user.email.lower():
+    if invitation.invited_email != current_user.email.lower():
         return jsonify({"message": "This invitation is for a different user."}), 403
         
-    if status != 'pending':
-        return jsonify({"message": f"This invitation has already been {status}."}), 409
+    if invitation.status != InvitationStatus.PENDING.value:
+        return jsonify({"message": f"This invitation has already been {invitation.status}."}), 409
 
-    update_query = text("UPDATE account_invitations SET status = 'declined' WHERE id = :inv_id")
-    db.session.execute(update_query, {"inv_id": inv_id})
+    invitation.status = InvitationStatus.DECLINED.value
     db.session.commit()
 
     return jsonify({"message": "Invitation declined."}), 200
@@ -211,23 +202,23 @@ def update_user_role(account_id, user_id):
 def remove_user_from_account(account_id, user_id):
     """Remove a user's access from an account. Allows self-removal."""
     
-    # Get the role of the user making the request
-    requester_role = get_user_role(current_user.id, account_id)
-    
     is_self_removal = current_user.id == user_id
 
-    # Check if the target user is the owner
-    target_user_role_query = text("SELECT role FROM user_account_access WHERE user_id = :user_id AND account_id = :account_id")
-    target_role = db.session.execute(target_user_role_query, {"user_id": user_id, "account_id": account_id}).scalar()
+    # Self-removal allowed
+    if not is_self_removal:
+        requester_role = get_user_role(current_user.id, account_id)
+        if not requester_role or requester_role not in [AccountRole.MANAGER, AccountRole.OWNER]:
+            return jsonify({"message": "Forbidden: You do not have permission to remove other users."}), 403
 
-    if target_role == AccountRole.OWNER.value:
-        return jsonify({"message": "Cannot remove the owner from the account."}), 400
+        target_user_role_query = text("SELECT role FROM user_account_access WHERE user_id = :user_id AND account_id = :account_id")
+        target_role = db.session.execute(target_user_role_query, {"user_id": user_id, "account_id": account_id}).scalar()
 
-    # Authorization logic
-    if not is_self_removal and requester_role not in [AccountRole.MANAGER, AccountRole.OWNER]:
-        return jsonify({"message": "Forbidden: You do not have permission to remove other users."}), 403
+        if target_role == AccountRole.OWNER.value:
+            return jsonify({"message": "Cannot remove the owner from the account."}), 400
+        
+        if requester_role == AccountRole.MANAGER and target_role == AccountRole.MANAGER.value:
+            return jsonify({"message": "Managers cannot remove other managers."}), 403
 
-    # Proceed with deletion
     query = text("DELETE FROM user_account_access WHERE user_id = :user_id AND account_id = :account_id")
     db.session.execute(query, {"user_id": user_id, "account_id": account_id})
     db.session.commit()

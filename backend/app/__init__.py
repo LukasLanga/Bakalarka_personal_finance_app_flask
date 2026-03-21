@@ -17,21 +17,28 @@ load_dotenv()
 
 login_manager = LoginManager()
 
-def create_app():
+def create_app(test_config=None):
+    """Create and configure an instance of the Flask application."""
     app = Flask(__name__)
 
-    db_url = os.environ.get('DATABASE_URL')
-    if not db_url:
-        raise RuntimeError("DATABASE_URL missing in .env file")
+    if test_config is None:
+        db_url = os.environ.get('DATABASE_URL')
+        if not db_url:
+            raise RuntimeError("DATABASE_URL missing in .env file")
 
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
-    if not app.config['SECRET_KEY']:
-        raise RuntimeError("SECRET_KEY missing in .env file")
+        secret_key = os.environ.get('SECRET_KEY')
+        if not secret_key:
+            raise RuntimeError("SECRET_KEY missing in .env file")
 
-    app.config['SQLALCHEMY_DATABASE_URI'] = db_url
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        app.config.from_mapping(
+            SECRET_KEY=secret_key,
+            SQLALCHEMY_DATABASE_URI=db_url,
+            SQLALCHEMY_TRACK_MODIFICATIONS=False,
+        )
+    else:
+        app.config.from_mapping(test_config)
+
     db.init_app(app)
-
     login_manager.init_app(app)
 
     with app.app_context():

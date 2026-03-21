@@ -1,5 +1,5 @@
 from backend.app.db import db
-from backend.app.models import User, Account, UserAccountAccess
+from backend.app.models import User, Account, UserAccountAccess, Transaction
 from sqlalchemy import func
 from sqlalchemy.orm import aliased
 
@@ -50,18 +50,21 @@ class AccountService:
     def delete_account(user: User, account_id: int):
         access =  UserAccountAccess.query.filter_by(user_id=user.id, account_id=account_id).first()
         if not access:
-            return False
+            raise PermissionError("User does not have access to this account.")
 
-        if access.role == 'owner':
-            from backend.app.models import Transaction
-            Transaction.query.filter_by(account_id=account_id).delete()
-            UserAccountAccess.query.filter_by(account_id=account_id).delete()
+        if access.role != 'owner':
+            raise PermissionError("Only owners can delete accounts.")
 
-            account = Account.query.get(account_id)
-            db.session.delete(account)
-            db.session.commit()
-            return True
-        return False
+        transaction_count = Transaction.query.filter_by(account_id=account_id).count()
+        if transaction_count > 0:
+            raise ValueError("Cannot delete account with transactions. Please delete them first.")
+
+        UserAccountAccess.query.filter_by(account_id=account_id).delete()
+        
+        account = Account.query.get(account_id)
+        db.session.delete(account)
+        db.session.commit()
+        return True
 
     @staticmethod
     def add_user(user: User, account_id: int, email: str, role: str):

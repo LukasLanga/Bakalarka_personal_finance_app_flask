@@ -5,6 +5,7 @@ from .account import Account
 from .user_account_access import UserAccountAccess
 from .currency_rate import CurrencyRate
 from .psd2_connection import Psd2Connection
+from .invitation import AccountInvitation
 
 
 __all__ = [
@@ -13,6 +14,6 @@ __all__ = [
     "UserAccountAccess",
     "Transaction",
     "Category",
-    "CurrencyRate",
     "Psd2Connection",
+    "AccountInvitation",
     ]

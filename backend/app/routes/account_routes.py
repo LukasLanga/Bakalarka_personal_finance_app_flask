@@ -56,6 +56,10 @@ def delete_account():
     try:
         AccountService.delete_account(user=current_user, account_id=data.get('account_id'))
         return jsonify({"success": True, "message": "Account deleted successfully"}), 200
+    except PermissionError as e:
+        return jsonify({"error": str(e)}), 403
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
