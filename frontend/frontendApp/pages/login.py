@@ -51,7 +51,7 @@ def password_input() -> rx.Component:
     )
 
 
-@rx.page(route="/login", title="Personal Finance App")
+@rx.page(route="/login", title="Personal Finance App", on_load=LoginState.on_load_reset)
 def login_page() -> rx.Component:
     return rx.box(
         rx.center(
@@ -78,7 +78,7 @@ def login_page() -> rx.Component:
                         rx.hstack(
                             rx.text(LoginState.translations["Password"], style=label_style),
                             rx.spacer(),
-                            rx.link(LoginState.translations["Forgot password?"], href="#", font_weight="500",
+                            rx.link(LoginState.translations["Forgot password?"], href="/forgot-password", font_weight="500",
                                     color=PRIMARY_COLOR),
                             justify="between",
                             width="100%",

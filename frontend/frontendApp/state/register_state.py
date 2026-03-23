@@ -5,14 +5,25 @@ from ..api import client
 
 class RegisterState(BaseState):
     """State for the registration form."""
-    username: str
-    email: str
-    password: str
-    confirm_password: str
+    username: str = ""
+    email: str = ""
+    password: str = ""
+    confirm_password: str = ""
     error_message: str = ""
     is_loading: bool = False
     show_password: bool = False
     show_confirm_password: bool = False
+
+    def on_load_reset(self):
+        """Reset the state when the page is loaded."""
+        self.username = ""
+        self.email = ""
+        self.password = ""
+        self.confirm_password = ""
+        self.error_message = ""
+        self.is_loading = False
+        self.show_password = False
+        self.show_confirm_password = False
 
     def set_username(self, value: str):
         self.username = value
@@ -35,10 +46,10 @@ class RegisterState(BaseState):
     async def handle_registration(self):
         self.error_message = ""
         if not self.username or not self.email or not self.password or not self.confirm_password:
-            self.error_message = "All fields are required."
+            self.error_message = self.translations["All fields are required."]
             return
         if self.password != self.confirm_password:
-            self.error_message = "Passwords do not match."
+            self.error_message = self.translations["password_mismatch"]
             return
         self.is_loading = True
         try:
@@ -47,10 +58,10 @@ class RegisterState(BaseState):
                     yield rx.redirect("/")
         except httpx.HTTPStatusError as e:
             try:
-                error_detail = e.response.json().get("ERROR", "Registration failed.")
+                error_detail = e.response.json().get("ERROR", self.translations["Registration failed."])
                 self.error_message = error_detail
             except:
-                self.error_message = "An unknown registration error occurred."
+                self.error_message = self.translations["An unknown registration error occurred."]
         except Exception as e:
             self.error_message = f"An unexpected error occurred: {e}"
         finally:

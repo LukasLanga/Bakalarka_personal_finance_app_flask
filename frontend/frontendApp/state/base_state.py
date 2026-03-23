@@ -30,15 +30,16 @@ class BaseState(rx.State):
 
     async def check_auth(self):
         """A placeholder auth check."""
-        public_routes = {"/login", "/register"}
+        public_routes = {"/login", "/register", "/forgot-password", "/reset-password"}
         try:
             if not self.is_authenticated:
                 self.logged_in_user = client.get_current_user(self.get_http_client())
             self.is_authenticated = True
         except (httpx.HTTPStatusError, Exception):
             self.is_authenticated = False
-            current_path = self.router.url.path
-            if current_path not in public_routes:
+            current_path = self.router.page.path
+            # Allow access to public routes even if not authenticated
+            if not any(current_path.startswith(route) for route in public_routes):
                 yield rx.redirect("/login")
 
     def set_locale(self, lang: str):

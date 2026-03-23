@@ -1,12 +1,15 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app, url_for
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
 from ..models.user import User
 from ..models.account import Account
 from ..models.category import Category
 from ..models.user_account_access import UserAccountAccess
 from ..models.invitation import AccountRole
 from ..db import db
+from .. import mail
+from flask_mail import Message
 
 auth_blueprint = Blueprint('auth', __name__)
 
@@ -18,6 +21,12 @@ DEFAULT_CATEGORIES = [
     {"name": "Housing", "type": "expense"},
     {"name": "Salary", "type": "income"},
 ]
+
+def get_serializer(secret_key=None):
+    """Get a URL-safe timed serializer."""
+    if secret_key is None:
+        secret_key = current_app.config['SECRET_KEY']
+    return URLSafeTimedSerializer(secret_key)
 
 @auth_blueprint.route('/api/login', methods=['POST'])
 def login():
@@ -100,3 +109,49 @@ def register():
 @login_required
 def me():
     return jsonify(current_user.to_dict()), 200
+
+@auth_blueprint.route('/api/forgot-password', methods=['POST'])
+def forgot_password():
+    data = request.get_json()
+    email = data.get('email')
+    if not email:
+        return jsonify({"ERROR": "Email is required"}), 400
+
+    user = User.query.filter_by(email=email).first()
+    if user:
+        s = get_serializer()
+        token = s.dumps(email, salt='password-reset-salt')
+        
+        # The URL to webpage
+        reset_url = f"http://localhost:3000/reset-password/{token}"
+
+        msg = Message(
+            'Password Reset Request',
+            recipients=[email]
+        )
+        msg.body = f'To reset your password, please click the following link: {reset_url}'
+        mail.send(msg)
+
+    return jsonify({"OK": "If an account with that email exists, a password reset link has been sent."}), 200
+
+@auth_blueprint.route('/api/reset-password/<token>', methods=['POST'])
+def reset_password_with_token(token):
+    s = get_serializer()
+    try:
+        email = s.loads(token, salt='password-reset-salt', max_age=3600)
+    except (SignatureExpired, BadTimeSignature):
+        return jsonify({"ERROR": "The password reset link is invalid or has expired."}), 400
+
+    data = request.get_json()
+    new_password = data.get('password')
+    if not new_password:
+        return jsonify({"ERROR": "Password is required"}), 400
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({"ERROR": "User not found."}), 404
+
+    user.password_hash = generate_password_hash(new_password, method='pbkdf2:sha256')
+    db.session.commit()
+
+    return jsonify({"OK": "Your password has been updated successfully."}), 200
