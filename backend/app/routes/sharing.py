@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 
 bp = Blueprint('sharing', __name__)
 
-@bp.route('/api/user-roles', methods=['GET'])
+@bp.route('/api/me/roles', methods=['GET'])
 @login_required
 def get_user_roles():
     """Get all roles for the current user across all their accounts."""
@@ -34,6 +34,9 @@ def invite_user(account_id):
     if not invited_email or not role:
         return jsonify({"message": "Invalid data: invited_email and role are required."}), 400
     
+    if role == AccountRole.OWNER.value:
+        return jsonify({"message": "The 'Owner' role cannot be assigned to another user."}), 403
+        
     invited_email = invited_email.lower()
     
     if role not in [r.value for r in AccountRole]:
@@ -64,11 +67,10 @@ def invite_user(account_id):
     
     return jsonify({"message": "Invitation sent successfully.", "token": token}), 201
 
-@bp.route('/api/invitations/accept', methods=['POST'])
+@bp.route('/api/invitations/<token>/accept', methods=['POST'])
 @login_required
-def accept_invitation():
+def accept_invitation(token):
     """Accept an account invitation."""
-    token = request.json.get('token')
     if not token:
         return jsonify({"message": "Invitation token is required."}), 400
 
@@ -98,11 +100,10 @@ def accept_invitation():
     
     return jsonify({"message": "Invitation accepted successfully."}), 200
 
-@bp.route('/api/invitations/decline', methods=['POST'])
+@bp.route('/api/invitations/<token>/decline', methods=['POST'])
 @login_required
-def decline_invitation():
+def decline_invitation(token):
     """Decline an account invitation."""
-    token = request.json.get('token')
     if not token:
         return jsonify({"message": "Invitation token is required."}), 400
 
@@ -122,10 +123,12 @@ def decline_invitation():
 
     return jsonify({"message": "Invitation declined."}), 200
 
-@bp.route('/api/invitations/pending', methods=['GET'])
+@bp.route('/api/me/invitations', methods=['GET'])
 @login_required
 def get_pending_invitations():
     """Get all pending invitations for the logged-in user."""
+    status_filter = request.args.get('status', 'pending', type=str)
+
     query = text("""
         SELECT
             i.id,
@@ -136,11 +139,11 @@ def get_pending_invitations():
         FROM account_invitations i
         JOIN accounts a ON i.account_id = a.id
         JOIN users u ON i.invited_by_user_id = u.id
-        WHERE i.invited_email = :email AND i.status = 'pending' AND i.expires_at > NOW()
+        WHERE i.invited_email = :email AND i.status = :status_filter AND i.expires_at > NOW()
         ORDER BY i.created_at DESC;
     """)
     
-    results = db.session.execute(query, {"email": current_user.email.lower()}).fetchall()
+    results = db.session.execute(query, {"email": current_user.email.lower(), "status_filter": status_filter}).fetchall()
     
     invitations = [
         {
@@ -182,6 +185,10 @@ def update_user_role(account_id, user_id):
     """Update a user's role for an account."""
     data = request.get_json()
     new_role = data.get('role')
+
+    if new_role == AccountRole.OWNER.value:
+        return jsonify({"message": "The 'Owner' role cannot be assigned to another user."}), 403
+
     if not new_role or new_role not in [role.value for role in AccountRole]:
         return jsonify({"message": "Invalid role specified."}), 400
 

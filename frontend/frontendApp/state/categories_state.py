@@ -14,7 +14,7 @@ class CategoriesState(BaseState):
     filter_type: str = "all"
     show_add_category_modal: bool = False
     show_delete_confirmation: bool = False
-    category_to_delete_name: str = ""
+    category_to_delete_id: int | None = None
 
     def reset_form(self):
         self.new_category_name = ""
@@ -59,13 +59,13 @@ class CategoriesState(BaseState):
         if not self.show_add_category_modal:
             self.reset_form()
 
-    def open_delete_confirmation(self, name: str):
+    def open_delete_confirmation(self, category_id: int):
         self.show_delete_confirmation = True
-        self.category_to_delete_name = name
+        self.category_to_delete_id = category_id
 
     def close_delete_confirmation(self):
         self.show_delete_confirmation = False
-        self.category_to_delete_name = ""
+        self.category_to_delete_id = None
 
     async def create_category(self):
         if not self.new_category_name:
@@ -80,8 +80,11 @@ class CategoriesState(BaseState):
             self.error_message = f"Failed to create category: {e}"
 
     async def delete_category(self):
+        if self.category_to_delete_id is None:
+            self.error_message = "No category selected for deletion."
+            return
         try:
-            client.delete_category(self.get_http_client(), self.category_to_delete_name)
+            client.delete_category(self.get_http_client(), self.category_to_delete_id)
             self.close_delete_confirmation()
             await self.load_categories()
         except Exception as e:

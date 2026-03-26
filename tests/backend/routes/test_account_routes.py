@@ -10,7 +10,7 @@ from datetime import date
 def test_create_account_success(auth, test_app):
     """
     GIVEN a logged-in user
-    WHEN a POST request is made to /api/createAccount
+    WHEN a POST request is made to /api/accounts
     THEN a new account is created and the user is given owner access.
     """
     account_data = {
@@ -19,7 +19,7 @@ def test_create_account_success(auth, test_app):
         "balance": 500.75,
         "currency": "USD"
     }
-    response = auth.client.post('/api/createAccount', json=account_data)
+    response = auth.client.post('/api/accounts', json=account_data)
     
     assert response.status_code == 201
     json_data = response.get_json()
@@ -61,7 +61,7 @@ def test_get_accounts_list(auth, test_app):
 def test_update_account_success(auth, test_app):
     """
     GIVEN a user has 'manager' access to an account
-    WHEN a POST request is made to /api/updateAccount
+    WHEN a PUT request is made to /api/accounts/{account_id}
     THEN the account details are updated.
     """
     account_id = None
@@ -75,10 +75,9 @@ def test_update_account_success(auth, test_app):
         account_id = account.id
 
     update_data = {
-        "account_id": account_id,
         "name": "Updated Name"
     }
-    response = auth.client.post('/api/updateAccount', json=update_data)
+    response = auth.client.put(f'/api/accounts/{account_id}', json=update_data)
     assert response.status_code == 200
     json_data = response.get_json()
     assert json_data['name'] == "Updated Name"
@@ -90,7 +89,7 @@ def test_update_account_success(auth, test_app):
 def test_delete_account_success(auth, test_app):
     """
     GIVEN a user is the OWNER of an account with no transactions
-    WHEN a POST request is made to /api/deleteAccount
+    WHEN a DELETE request is made to /api/accounts/{account_id}
     THEN the account is deleted.
     """
     with test_app.app_context():
@@ -102,7 +101,7 @@ def test_delete_account_success(auth, test_app):
         db.session.commit()
         account_id = account.id
 
-    response = auth.client.post('/api/deleteAccount', json={"account_id": account_id})
+    response = auth.client.delete(f'/api/accounts/{account_id}')
     assert response.status_code == 200
     assert response.get_json()['success'] is True
 
@@ -113,7 +112,7 @@ def test_delete_account_success(auth, test_app):
 def test_delete_account_forbidden(auth, test_app):
     """
     GIVEN a user is only a MANAGER of an account
-    WHEN a POST request is made to /api/deleteAccount
+    WHEN a DELETE request is made to /api/accounts/{account_id}
     THEN the request is forbidden.
     """
     with test_app.app_context():
@@ -125,7 +124,7 @@ def test_delete_account_forbidden(auth, test_app):
         db.session.commit()
         account_id = account.id
 
-    response = auth.client.post('/api/deleteAccount', json={"account_id": account_id})
+    response = auth.client.delete(f'/api/accounts/{account_id}')
     assert response.status_code == 403
     assert "Forbidden" in response.get_json()['message']
 
@@ -147,7 +146,7 @@ def test_delete_account_with_transactions_fails(auth, test_app):
         db.session.commit()
         account_id = account.id
 
-    response = auth.client.post('/api/deleteAccount', json={"account_id": account_id})
+    response = auth.client.delete(f'/api/accounts/{account_id}')
     assert response.status_code == 400
     assert "Cannot delete account with transactions" in response.get_json()['error']
 

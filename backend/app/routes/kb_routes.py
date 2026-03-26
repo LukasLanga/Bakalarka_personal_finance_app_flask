@@ -53,7 +53,7 @@ def get_valid_kb_token_for_user(user_id):
 
     return master_connection.access_token
 
-@kb_blueprint.route('/kb/connection-status', methods=['GET'])
+@kb_blueprint.route('/api/psd2-connections/status', methods=['GET'])
 @login_required
 def get_connection_status():
     """Checks if a master KB connection record exists for the current user."""
@@ -61,7 +61,7 @@ def get_connection_status():
     is_connected = master_connection is not None and master_connection.access_token is not None
     return jsonify({'connected': is_connected})
 
-@kb_blueprint.route('/kb/token', methods=['POST'])
+@kb_blueprint.route('/api/psd2-connections', methods=['POST'])
 @login_required
 def get_kb_token():
     """
@@ -100,7 +100,7 @@ def get_kb_token():
     except (FileNotFoundError, requests.exceptions.RequestException) as e:
         return jsonify({'error': str(e)}), 500
 
-@kb_blueprint.route('/kb/available-accounts', methods=['GET'])
+@kb_blueprint.route('/api/psd2-connections/available-accounts', methods=['GET'])
 @login_required
 def get_available_kb_accounts():
     """
@@ -140,7 +140,7 @@ def get_available_kb_accounts():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@kb_blueprint.route('/kb/sync-single-account', methods=['POST'])
+@kb_blueprint.route('/api/psd2-connections/sync', methods=['POST'])
 @login_required
 def sync_single_account_route():
     """
@@ -163,7 +163,7 @@ def sync_single_account_route():
         print("------------------------------------")
         return jsonify({'error': str(e)}), 500
 
-@kb_blueprint.route('/kb/accounts/<client_id>/transactions', methods=['GET'])
+@kb_blueprint.route('/api/psd2-connections/external-accounts/<string:client_id>/transactions', methods=['GET'])
 @login_required
 def get_kb_account_transactions(client_id):
     try:
@@ -184,7 +184,7 @@ def get_kb_account_transactions(client_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@kb_blueprint.route('/kb/accounts/<client_id>/balance', methods=['GET'])
+@kb_blueprint.route('/api/psd2-connections/external-accounts/<string:client_id>/balance', methods=['GET'])
 @login_required
 def get_kb_account_balance(client_id):
     try:

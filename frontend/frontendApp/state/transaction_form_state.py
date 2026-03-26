@@ -8,7 +8,7 @@ from ..api import client
 class TransactionFormState(BaseState):
     """State for the transaction form."""
     form_account_id: str = ""
-    category_name: str = ""
+    category_id: str = ""
     name: str = ""
     amount: float = 0.0
     date: str = str(datetime.utcnow().date())
@@ -19,7 +19,7 @@ class TransactionFormState(BaseState):
 
     def reset_form(self):
         self.form_account_id = ""
-        self.category_name = ""
+        self.category_id = ""
         self.name = ""
         self.amount = 0.0
         self.date = str(datetime.utcnow().date())
@@ -53,17 +53,14 @@ class TransactionFormState(BaseState):
                 self.currency = acc.get("currency") if isinstance(acc, dict) else acc.currency
                 break
 
-    def set_category_name(self, value: str):
-        self.category_name = value
+    def set_category_id(self, value: str):
+        self.category_id = value
 
     async def handle_submit(self, accounts: List[Union[Account, Dict[str, Any]]], categories: List[Union[Category, Dict[str, Any]]]):
         from .dashboard_state import DashboardState
         self.is_loading = True
         self.error_message = ""
         try:
-            def get_name(item):
-                return item.get("name") if isinstance(item, dict) else item.name
-            
             def get_id(item):
                 return item.get("id") if isinstance(item, dict) else item.id
             
@@ -87,16 +84,17 @@ class TransactionFormState(BaseState):
                 self.is_loading = False
                 return
 
-            selected_category = next((cat for cat in categories if get_name(cat) == self.category_name), None)
-            if not selected_category:
+            if not self.category_id:
                 self.error_message = self.translations["Please select a valid category."]
                 self.is_loading = False
                 return
+            
+            selected_category_id_int = int(self.category_id)
 
             client.create_transaction(
                 self.get_http_client(),
                 account_id=selected_account_id_int,
-                category_id=get_id(selected_category),
+                category_id=selected_category_id_int,
                 name=self.name,
                 amount=self.amount,
                 date=self.date,

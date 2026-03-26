@@ -46,10 +46,10 @@ def setup_transactions(auth, test_app):
 def test_get_dashboard_summary_all_accounts(auth, setup_transactions):
     """
     GIVEN a user with transactions across multiple accounts
-    WHEN a GET request is made to /api/dashboardSummary without an account_id
+    WHEN a GET request is made to /api/dashboard/summary without an account_id
     THEN a summary of the current month across all accounts is returned.
     """
-    response = auth.client.get('/api/dashboardSummary')
+    response = auth.client.get('/api/dashboard/summary')
     
     assert response.status_code == 200
     summary = response.get_json()
@@ -62,13 +62,13 @@ def test_get_dashboard_summary_all_accounts(auth, setup_transactions):
 def test_get_dashboard_summary_single_account(auth, setup_transactions):
     """
     GIVEN a user with transactions
-    WHEN a GET request is made to /api/dashboardSummary with a specific account_id
+    WHEN a GET request is made to /api/dashboard/summary with a specific account_id
     THEN a summary for only that account is returned.
     """
     acc2_id = setup_transactions['acc2_id']
     last_month = date.today() - timedelta(days=30)
     
-    url = f'/api/dashboardSummary?account_id={acc2_id}&year={last_month.year}&month={last_month.month}'
+    url = f'/api/dashboard/summary?account_id={acc2_id}&year={last_month.year}&month={last_month.month}'
     response = auth.client.get(url)
     
     assert response.status_code == 200
@@ -82,10 +82,10 @@ def test_get_dashboard_summary_single_account(auth, setup_transactions):
 def test_get_yearly_overview(auth, setup_transactions):
     """
     GIVEN a user with transactions over the last year
-    WHEN a GET request is made to /api/yearly-overview
+    WHEN a GET request is made to /api/dashboard/yearly-overview
     THEN a list of 12 months with aggregated income/expenses is returned.
     """
-    response = auth.client.get('/api/yearly-overview')
+    response = auth.client.get('/api/dashboard/yearly-overview')
     
     assert response.status_code == 200
     overview = response.get_json()
@@ -113,10 +113,10 @@ def test_get_yearly_overview(auth, setup_transactions):
 def test_dashboard_summary_spending_by_category(auth, setup_transactions):
     """
     GIVEN transactions with categories
-    WHEN a GET request is made to /api/dashboardSummary
+    WHEN a GET request is made to /api/dashboard/summary
     THEN the spending_by_category field is correctly aggregated and ordered.
     """
-    response = auth.client.get('/api/dashboardSummary')
+    response = auth.client.get('/api/dashboard/summary')
     
     assert response.status_code == 200
     summary = response.get_json()
@@ -134,7 +134,7 @@ def test_dashboard_summary_spending_by_category(auth, setup_transactions):
 def test_dashboard_summary_no_transactions(auth, test_app):
     """
     GIVEN a user with an account but no transactions in a given month
-    WHEN a GET request is made to /api/dashboardSummary for that month
+    WHEN a GET request is made to /api/dashboard/summary for that month
     THEN a zeroed-out summary is returned.
     """
     with test_app.app_context():
@@ -146,7 +146,7 @@ def test_dashboard_summary_no_transactions(auth, test_app):
         db.session.commit()
 
     # Request summary for a month with no transactions
-    response = auth.client.get('/api/dashboardSummary?year=2020&month=1')
+    response = auth.client.get('/api/dashboard/summary?year=2020&month=1')
     
     assert response.status_code == 200
     summary = response.get_json()

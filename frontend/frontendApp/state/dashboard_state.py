@@ -80,7 +80,7 @@ class DashboardState(BaseState):
     @rx.var
     def category_options(self) -> List[Dict[str, str]]:
         """Returns a list of dictionaries with category names for the select component."""
-        return [{"label": cat.name, "value": cat.name} for cat in self.categories]
+        return [{"label": cat.name, "value": str(cat.id)} for cat in self.categories]
 
     @rx.var
     def spending_by_category_dict(self) -> List[Dict[str, Any]]:

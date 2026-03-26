@@ -158,8 +158,8 @@ def transaction_detail() -> rx.Component:
                                                             lambda option: rx.select.item(option["label"], value=option["value"])
                                                         )
                                                     ),
-                                                    value=TransactionDetailState.edit_category_name,
-                                                    on_change=TransactionDetailState.set_edit_category_name,
+                                                    value=TransactionDetailState.edit_category_id,
+                                                    on_change=TransactionDetailState.set_edit_category_id,
                                                     width="100%",
                                                     color_scheme="gray",
                                                     variant="surface",

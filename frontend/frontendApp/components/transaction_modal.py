@@ -72,11 +72,22 @@ def transaction_modal() -> rx.Component:
                         width="100%"
                     ),
                     rx.text(DashboardState.translations["Category"], size="1", margin_bottom="-8px", color_scheme="gray"),
-                    rx.select(
-                        DashboardState.category_names,
-                        placeholder=DashboardState.translations["Select Category"],
-                        value=TransactionFormState.category_name,
-                        on_change=TransactionFormState.set_category_name,
+                    rx.select.root( # Changed to rx.select.root
+                        rx.select.trigger(
+                            placeholder=DashboardState.translations["Select Category"],
+                            size="2",
+                            variant="surface",
+                            class_name="rt-reset",
+                            width="100%"
+                        ),
+                        rx.select.content(
+                            rx.foreach(
+                                DashboardState.category_options,
+                                lambda option: rx.select.item(option["label"], value=option["value"])
+                            )
+                        ),
+                        value=TransactionFormState.category_id, # Changed to category_id
+                        on_change=TransactionFormState.set_category_id, # Changed to set_category_id
                         width="100%",
                     ),
                     spacing="4",
