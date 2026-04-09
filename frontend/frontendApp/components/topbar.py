@@ -113,7 +113,7 @@ def topbar() -> rx.Component:
                     size="3",
                 ),
             ),
-            dark_mode_toggle(), # Added dark mode toggle here
+            dark_mode_toggle(),
             language_switcher(),
             rx.button(
                 rx.icon("log-out", size=16),
