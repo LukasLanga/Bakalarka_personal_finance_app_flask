@@ -23,7 +23,6 @@ def setup_account(auth, test_app):
 def test_create_transaction_success(auth, setup_account, test_app):
     """Test creating a transaction successfully."""
     transaction_data = {
-        "account_id": setup_account.id,
         "name": "Coffee",
         "amount": -5.50,
         "date": "2024-01-15",
@@ -31,23 +30,10 @@ def test_create_transaction_success(auth, setup_account, test_app):
         "currency": "EUR",
         "source": "manual"
     }
-    response = auth.client.post('/api/createTransaction', json=transaction_data)
+    response = auth.client.post(f'/api/accounts/{setup_account.id}/transactions', json=transaction_data)
     assert response.status_code == 201
     json_data = response.get_json()
     assert json_data['name'] == "Coffee"
-
-def test_get_transactions_by_account(auth, setup_account, test_app):
-    """Test listing transactions for a specific account."""
-    with test_app.app_context():
-        t1 = Transaction(account_id=setup_account.id, name="Lunch", amount=-12, date=date.today(), description="", currency="EUR", source="manual")
-        t2 = Transaction(account_id=setup_account.id, name="Salary", amount=2000, date=date.today(), description="", currency="EUR", source="manual")
-        db.session.add_all([t1, t2])
-        db.session.commit()
-
-    response = auth.client.get(f'/api/getTransactionsByAccount?account_id={setup_account.id}')
-    assert response.status_code == 200
-    json_data = response.get_json()
-    assert len(json_data) == 2
 
 def test_create_transaction_forbidden(auth, test_app):
     """Test creating a transaction on an account the user does not have access to."""
@@ -61,8 +47,8 @@ def test_create_transaction_forbidden(auth, test_app):
         db.session.commit()
         account_id = other_account.id
 
-    transaction_data = {"account_id": account_id, "name": "Fraud", "amount": -100, "date": "2024-01-15"}
-    response = auth.client.post('/api/createTransaction', json=transaction_data)
+    transaction_data = {"name": "Fraud", "amount": -100, "date": "2024-01-15"}
+    response = auth.client.post(f'/api/accounts/{account_id}/transactions', json=transaction_data)
     assert response.status_code == 403
 
 def test_get_transactions_forbidden(auth, test_app):
@@ -77,7 +63,7 @@ def test_get_transactions_forbidden(auth, test_app):
         db.session.commit()
         account_id = other_account.id
 
-    response = auth.client.get(f'/api/getTransactionsByAccount?account_id={account_id}')
+    response = auth.client.get(f'/api/transactions?account_id={account_id}') # Corrected endpoint
     assert response.status_code == 403
 
 def test_delete_transaction_success(auth, setup_account, test_app):
@@ -88,8 +74,7 @@ def test_delete_transaction_success(auth, setup_account, test_app):
         db.session.commit()
         transaction_id = transaction.id
 
-    delete_data = {"account_id": setup_account.id, "transaction_id": transaction_id}
-    response = auth.client.post('/api/deleteTransaction', json=delete_data)
+    response = auth.client.delete(f'/api/accounts/{setup_account.id}/transactions/{transaction_id}')
     assert response.status_code == 200
 
 def test_update_transaction_success(auth, setup_account, test_app):
@@ -100,25 +85,25 @@ def test_update_transaction_success(auth, setup_account, test_app):
         db.session.commit()
         transaction_id = transaction.id
 
-    update_data = {"transaction_id": transaction_id, "account_id": setup_account.id, "name": "Updated"}
-    response = auth.client.post('/api/updateTransaction', json=update_data)
+    update_data = {"name": "Updated"}
+    response = auth.client.put(f'/api/accounts/{setup_account.id}/transactions/{transaction_id}', json=update_data)
     assert response.status_code == 200
     assert response.get_json()['name'] == "Updated"
 
 def test_get_all_transactions_pagination(auth, setup_account, test_app):
-    """Test pagination for getAllTransactions."""
+    """Test pagination for /api/transactions."""
     with test_app.app_context():
         for i in range(15):
             db.session.add(Transaction(account_id=setup_account.id, name=f"T{i}", amount=-1, date=date.today(), description="", currency="EUR", source="manual"))
         db.session.commit()
 
-    response = auth.client.get('/api/getAllTransactions?page=2&per_page=10')
+    response = auth.client.get('/api/transactions?page=2&per_page=10')
     assert response.status_code == 200
     json_data = response.get_json()
     assert len(json_data['transactions']) == 5
 
 def test_get_all_transactions_search(auth, setup_account, test_app):
-    """Test search functionality for getAllTransactions."""
+    """Test search functionality for /api/transactions."""
     with test_app.app_context():
         db.session.add_all([
             Transaction(account_id=setup_account.id, name="Unique Coffee", amount=-5, date=date.today(), description="Morning", currency="EUR", source="manual"),
@@ -126,14 +111,14 @@ def test_get_all_transactions_search(auth, setup_account, test_app):
         ])
         db.session.commit()
 
-    response = auth.client.get('/api/getAllTransactions?search_query=Unique')
+    response = auth.client.get('/api/transactions?search_query=Unique')
     assert response.status_code == 200
     json_data = response.get_json()
     assert len(json_data['transactions']) == 1
     assert json_data['transactions'][0]['name'] == 'Unique Coffee'
 
 def test_get_all_transactions_filter_by_account(auth, test_app):
-    """Test filtering by account_id for getAllTransactions."""
+    """Test filtering by account_id for /api/transactions."""
     with test_app.app_context():
         acc1 = Account(name="Acc1", balance=100)
         acc2 = Account(name="Acc2", balance=100)
@@ -151,7 +136,7 @@ def test_get_all_transactions_filter_by_account(auth, test_app):
         db.session.commit()
         acc1_id = acc1.id
 
-    response = auth.client.get(f'/api/getAllTransactions?account_id={acc1_id}')
+    response = auth.client.get(f'/api/transactions?account_id={acc1_id}')
     assert response.status_code == 200
     json_data = response.get_json()
     assert len(json_data['transactions']) == 1
@@ -169,7 +154,6 @@ def test_create_transaction_with_other_users_category_fails(auth, test_app, setu
         other_category_id = other_category.id
 
     transaction_data = {
-        "account_id": setup_account.id,
         "name": "Bad Category",
         "amount": -50,
         "date": "2024-01-15",
@@ -178,19 +162,18 @@ def test_create_transaction_with_other_users_category_fails(auth, test_app, setu
         "source": "manual",
         "category_id": other_category_id
     }
-    response = auth.client.post('/api/createTransaction', json=transaction_data)
+    response = auth.client.post(f'/api/accounts/{setup_account.id}/transactions', json=transaction_data)
     assert response.status_code == 500
     assert "Category not found or does not belong to user" in response.get_json()['error']
 
 def test_create_transaction_missing_required_data(auth, setup_account):
     """Test that creating a transaction with missing required fields fails."""
     transaction_data = {
-        "account_id": setup_account.id,
         "amount": -5.50,
         "date": "2024-01-15",
         "description": "Missing name",
         "currency": "EUR",
         "source": "manual"
     }
-    response = auth.client.post('/api/createTransaction', json=transaction_data)
+    response = auth.client.post(f'/api/accounts/{setup_account.id}/transactions', json=transaction_data)
     assert response.status_code == 500

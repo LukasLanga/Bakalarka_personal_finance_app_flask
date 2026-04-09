@@ -53,13 +53,13 @@ def setup_kb_connection(auth, test_app):
 
 def test_get_connection_status_false(auth):
     """Test that connection status is false when no connection exists."""
-    response = auth.client.get('/kb/connection-status')
+    response = auth.client.get('/api/psd2-connections/status')
     assert response.status_code == 200
     assert response.get_json()['connected'] is False
 
 def test_get_connection_status_true(auth, setup_kb_connection):
     """Test that connection status is true when a connection exists."""
-    response = auth.client.get('/kb/connection-status')
+    response = auth.client.get('/api/psd2-connections/status')
     assert response.status_code == 200
     assert response.get_json()['connected'] is True
 
@@ -73,7 +73,7 @@ def test_get_kb_token_initial(mock_get_certs, mock_requests_post, auth, test_app
     mock_requests_post.return_value = mock_response
     mock_get_certs.return_value = ('cert_path', 'key_path')
 
-    response = auth.client.post('/kb/token')
+    response = auth.client.post('/api/psd2-connections')
     assert response.status_code == 200
     assert "master connection successful" in response.get_json()['message']
 
@@ -91,7 +91,7 @@ def test_sync_single_account_route(mock_get_token, mock_sync_service, auth, test
     
     kb_account_data = {"id": "acc-to-sync", "name": "Account to Sync"}
     
-    response = auth.client.post('/kb/sync-single-account', json=kb_account_data)
+    response = auth.client.post('/api/psd2-connections/sync', json=kb_account_data)
     
     assert response.status_code == 200
     assert "Account synchronized successfully" in response.get_json()['message']
@@ -106,7 +106,7 @@ def test_sync_single_account_route(mock_get_token, mock_sync_service, auth, test
 def test_get_available_kb_accounts(mock_get_certs, mock_requests_get, auth, setup_kb_connection):
     """
     GIVEN a user with a valid KB connection and one linked account
-    WHEN a GET request is made to /kb/available-accounts
+    WHEN a GET request is made to /api/psd2-connections/available-accounts
     THEN the API should return only the unlinked accounts from KB.
     """
     mock_response = MagicMock()
@@ -115,7 +115,7 @@ def test_get_available_kb_accounts(mock_get_certs, mock_requests_get, auth, setu
     mock_requests_get.return_value = mock_response
     mock_get_certs.return_value = ('cert_path', 'key_path')
 
-    response = auth.client.get('/kb/available-accounts')
+    response = auth.client.get('/api/psd2-connections/available-accounts')
     
     assert response.status_code == 200
     available_accounts = response.get_json()

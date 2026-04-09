@@ -6,7 +6,7 @@ from collections import defaultdict
 
 dashboard_blueprint = Blueprint('dashboard', __name__)
 
-@dashboard_blueprint.route('/api/dashboardSummary', methods=['GET'])
+@dashboard_blueprint.route('/api/dashboard/summary', methods=['GET'])
 @login_required
 def get_dashboard_summary():
     try:
@@ -39,7 +39,7 @@ def get_dashboard_summary():
     
     return jsonify(summary_data), 200
 
-@dashboard_blueprint.route('/api/yearly-overview', methods=['GET'])
+@dashboard_blueprint.route('/api/dashboard/yearly-overview', methods=['GET'])
 @login_required
 def get_yearly_overview():
     """

@@ -63,7 +63,7 @@ def test_invite_user_no_permission(auth, test_app):
 def test_accept_invitation_success(auth, test_app):
     """
     GIVEN a valid invitation for a logged-in user
-    WHEN a POST request is made to /api/invitations/accept
+    WHEN a POST request is made to /api/invitations/<token>/accept
     THEN check that the user gains access and the invitation is updated
     """
     with test_app.app_context():
@@ -83,7 +83,7 @@ def test_accept_invitation_success(auth, test_app):
         db.session.add(invitation)
         db.session.commit()
 
-        response = auth.client.post('/api/invitations/accept', json={'token': token})
+        response = auth.client.post(f'/api/invitations/{token}/accept')
 
         assert response.status_code == 200
         assert response.get_json()['message'] == 'Invitation accepted successfully.'
@@ -98,7 +98,7 @@ def test_accept_invitation_success(auth, test_app):
 def test_decline_invitation_success(auth, test_app):
     """
     GIVEN a valid invitation for a logged-in user
-    WHEN a POST request is made to /api/invitations/decline
+    WHEN a POST request is made to /api/invitations/<token>/decline
     THEN check that the invitation status is updated
     """
     with test_app.app_context():
@@ -118,7 +118,7 @@ def test_decline_invitation_success(auth, test_app):
         db.session.add(invitation)
         db.session.commit()
 
-        response = auth.client.post('/api/invitations/decline', json={'token': token})
+        response = auth.client.post(f'/api/invitations/{token}/decline')
 
         assert response.status_code == 200
         assert response.get_json()['message'] == 'Invitation declined.'
@@ -131,10 +131,10 @@ def test_decline_invitation_success(auth, test_app):
 def test_accept_invitation_invalid_token(auth, test_app):
     """
     GIVEN a logged-in user
-    WHEN a POST request is made to /api/invitations/accept with a bad token
+    WHEN a POST request is made to /api/invitations/<token>/accept with a bad token
     THEN check that the response is 404
     """
-    response = auth.client.post('/api/invitations/accept', json={'token': 'this-is-not-a-real-token'})
+    response = auth.client.post('/api/invitations/this-is-not-a-real-token/accept')
     assert response.status_code == 404
 
 @pytest.mark.xfail(reason="Known bug in remove_user_from_account: g.user_role is not set.")

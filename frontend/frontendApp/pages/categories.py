@@ -116,7 +116,7 @@ def categories() -> rx.Component:
                                     rx.table.cell(
                                         rx.button(
                                             rx.icon("trash-2", size=16),
-                                            on_click=CategoriesState.open_delete_confirmation(cat.name),
+                                            on_click=lambda: CategoriesState.open_delete_confirmation(cat.id),
                                             size="1",
                                             color_scheme="red",
                                             variant="soft",

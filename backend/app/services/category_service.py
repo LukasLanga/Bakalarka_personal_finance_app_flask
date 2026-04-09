@@ -41,8 +41,8 @@ class CategoryService:
         return category
 
     @staticmethod
-    def delete_category(user: User, category_name: str):
-        category = Category.query.filter_by(user_id=user.id, name=category_name).first()
+    def delete_category(user: User, category_id: int):
+        category = Category.query.filter_by(user_id=user.id, id=category_id).first()
 
         if not category:
             raise ValueError('Category not found')

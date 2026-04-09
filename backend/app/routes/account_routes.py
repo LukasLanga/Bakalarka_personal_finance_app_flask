@@ -15,7 +15,7 @@ def list_accounts():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@account_blueprint.route('/api/createAccount', methods=['POST'])
+@account_blueprint.route('/api/accounts', methods=['POST'])
 @login_required
 def create_account():
     data = request.get_json()
@@ -31,15 +31,15 @@ def create_account():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-@account_blueprint.route('/api/updateAccount', methods=['POST'])
+@account_blueprint.route('/api/accounts/<int:account_id>', methods=['PUT'])
 @login_required
 @requires_role(AccountRole.MANAGER, AccountRole.OWNER)
-def update_account():
+def update_account(account_id):
     data = request.get_json()
     try:
         updated_account = AccountService.update_account(
             user=current_user,
-            account_id=data.get('account_id'),
+            account_id=account_id,
             name=data.get('name'),
             bank_name=data.get('bank_name'),
             currency=data.get('currency')
@@ -48,13 +48,12 @@ def update_account():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@account_blueprint.route('/api/deleteAccount', methods=['POST'])
+@account_blueprint.route('/api/accounts/<int:account_id>', methods=['DELETE'])
 @login_required
 @requires_role(AccountRole.OWNER)
-def delete_account():
-    data = request.get_json()
+def delete_account(account_id):
     try:
-        AccountService.delete_account(user=current_user, account_id=data.get('account_id'))
+        AccountService.delete_account(user=current_user, account_id=account_id)
         return jsonify({"success": True, "message": "Account deleted successfully"}), 200
     except PermissionError as e:
         return jsonify({"error": str(e)}), 403
@@ -63,13 +62,9 @@ def delete_account():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@account_blueprint.route('/api/get-account-balance', methods=['GET'])
+@account_blueprint.route('/api/accounts/<int:account_id>/balance', methods=['GET'])
 @login_required
-def get_account_balance():
-    account_id = request.args.get('account_id', type=int)
-    if not account_id:
-        return jsonify({"error": "account_id parameter is required"}), 400
-        
+def get_account_balance(account_id):
     user_role = get_user_role(current_user.id, account_id)
     if not user_role:
         return jsonify({"message": "Forbidden: You do not have access to this account."}), 403
@@ -80,7 +75,7 @@ def get_account_balance():
     except Exception as e:
         return jsonify({"error": "An unexpected error occurred."}), 500
 
-@account_blueprint.route('/api/total-balance', methods=['GET'])
+@account_blueprint.route('/api/accounts/summary/total-balance', methods=['GET'])
 @login_required
 def get_total_balance():
     try:

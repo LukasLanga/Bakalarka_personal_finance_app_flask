@@ -11,14 +11,14 @@ from datetime import date
 def test_create_category_success(auth, test_app):
     """
     GIVEN a logged-in user
-    WHEN a POST request is made to /api/createCategory
+    WHEN a POST request is made to /api/categories
     THEN a new category is created for that user.
     """
     category_data = {
         "name": "Groceries",
         "type": "expense"
     }
-    response = auth.client.post('/api/createCategory', json=category_data)
+    response = auth.client.post('/api/categories', json=category_data)
     
     assert response.status_code == 201
     json_data = response.get_json()
@@ -33,7 +33,7 @@ def test_create_category_success(auth, test_app):
 def test_list_categories_success(auth, test_app):
     """
     GIVEN a user has several categories
-    WHEN a GET request is made to /api/listCategories
+    WHEN a GET request is made to /api/categories
     THEN a list of those categories is returned.
     """
     with test_app.app_context():
@@ -42,7 +42,7 @@ def test_list_categories_success(auth, test_app):
         db.session.add_all([cat1, cat2])
         db.session.commit()
 
-    response = auth.client.get('/api/listCategories')
+    response = auth.client.get('/api/categories')
     assert response.status_code == 200
     json_data = response.get_json()
     assert isinstance(json_data, list)
@@ -52,17 +52,17 @@ def test_list_categories_success(auth, test_app):
 def test_delete_category_success(auth, test_app):
     """
     GIVEN a user owns a category with no transactions
-    WHEN a POST request is made to /api/deleteCategory
+    WHEN a DELETE request is made to /api/categories/{category_id}
     THEN the category is deleted.
     """
-    category_name = "To Be Deleted"
+    category_id = None
     with test_app.app_context():
-        category = Category(name=category_name, type="expense", user_id=auth.user.id)
+        category = Category(name="To Be Deleted", type="expense", user_id=auth.user.id)
         db.session.add(category)
         db.session.commit()
         category_id = category.id
 
-    response = auth.client.post('/api/deleteCategory', json={"name": category_name})
+    response = auth.client.delete(f'/api/categories/{category_id}')
     assert response.status_code == 200
     assert response.get_json()['success'] is True
 
@@ -73,26 +73,27 @@ def test_delete_category_success(auth, test_app):
 def test_delete_category_forbidden(auth, test_app):
     """
     GIVEN a category owned by another user
-    WHEN a user tries to delete it via /api/deleteCategory
+    WHEN a user tries to delete it via /api/categories/{category_id}
     THEN the operation should fail.
     """
-    category_name = "Secret Category"
+    category_id = None
     with test_app.app_context():
         other_user = User(username="otheruser", email="other@user.com", password="pw")
         db.session.add(other_user)
         db.session.flush()
         
-        other_category = Category(name=category_name, type="expense", user_id=other_user.id)
+        other_category = Category(name="Secret Category", type="expense", user_id=other_user.id)
         db.session.add(other_category)
         db.session.commit()
+        category_id = other_category.id
 
-    response = auth.client.post('/api/deleteCategory', json={"name": category_name})
+    response = auth.client.delete(f'/api/categories/{category_id}')
     
     assert response.status_code == 400 
     assert "Category not found" in response.get_json().get('error', '')
 
     with test_app.app_context():
-        category_still_exists = Category.query.filter_by(name=category_name).first()
+        category_still_exists = Category.query.get(category_id)
         assert category_still_exists is not None
 
 def test_delete_category_with_transactions_fails(auth, test_app):
@@ -102,6 +103,7 @@ def test_delete_category_with_transactions_fails(auth, test_app):
     THEN the operation should fail to preserve data integrity.
     """
     category_name = "Holiday"
+    category_id = None
     with test_app.app_context():
         account = Account(name="Test Account", balance=1000)
         db.session.add(account)
@@ -112,6 +114,7 @@ def test_delete_category_with_transactions_fails(auth, test_app):
         category = Category(name=category_name, type="expense", user_id=auth.user.id)
         db.session.add(category)
         db.session.flush()
+        category_id = category.id
         
         transaction = Transaction(
             account_id=account.id,
@@ -125,9 +128,8 @@ def test_delete_category_with_transactions_fails(auth, test_app):
         )
         db.session.add(transaction)
         db.session.commit()
-        category_id = category.id
 
-    response = auth.client.post('/api/deleteCategory', json={"name": category_name})
+    response = auth.client.delete(f'/api/categories/{category_id}')
     
     assert response.status_code == 400
     expected_error = f"Cannot delete category '{category_name}' as it is currently in use."

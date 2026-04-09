@@ -20,7 +20,7 @@ class TransactionDetailState(BaseState):
     edit_amount: float = 0.0
     edit_date: str = ""
     edit_description: str = ""
-    edit_category_name: str = ""
+    edit_category_id: str = ""
 
     def set_edit_name(self, value: str):
         self.edit_name = value
@@ -37,8 +37,8 @@ class TransactionDetailState(BaseState):
     def set_edit_description(self, value: str):
         self.edit_description = value
 
-    def set_edit_category_name(self, value: str):
-        self.edit_category_name = value
+    def set_edit_category_id(self, value: str):
+        self.edit_category_id = value
 
     async def get_transaction_detail(self):
         """Fetch transaction details based on URL params."""
@@ -108,7 +108,7 @@ class TransactionDetailState(BaseState):
                 self.edit_date = ""
 
             self.edit_description = self.transaction.description or ""
-            self.edit_category_name = self.category_name
+            self.edit_category_id = str(self.transaction.category_id) if self.transaction.category_id else ""
             return DashboardState.load_categories
         return
 
@@ -128,14 +128,12 @@ class TransactionDetailState(BaseState):
                 self.is_loading = False
                 return
 
-            if not self.edit_category_name:
+            if not self.edit_category_id:
                 self.error_message = self.translations["Please select a valid category."]
                 self.is_loading = False
                 return
-
-            categories = client.list_categories(self.get_http_client())
-            selected_category = next((cat for cat in categories if cat.name == self.edit_category_name), None)
-            category_id = selected_category.id if selected_category else None
+            
+            category_id_int = int(self.edit_category_id)
 
             updated_transaction = client.update_transaction(
                 self.get_http_client(),
@@ -145,11 +143,14 @@ class TransactionDetailState(BaseState):
                 amount=self.edit_amount,
                 date=self.edit_date,
                 description=self.edit_description,
-                category_id=category_id
+                category_id=category_id_int
             )
             
             self.transaction = updated_transaction
-            self.category_name = self.edit_category_name if selected_category else "Uncategorized"
+            categories = client.list_categories(self.get_http_client())
+            selected_category = next((cat for cat in categories if cat.id == category_id_int), None)
+            self.category_name = selected_category.name if selected_category else "Uncategorized"
+
             self.is_editing = False
             
             return [DashboardState.load_dashboard_summary]

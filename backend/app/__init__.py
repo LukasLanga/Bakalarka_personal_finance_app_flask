@@ -49,7 +49,7 @@ def create_app(test_config=None):
         from backend.app.routes.dashboard_routes import dashboard_blueprint
         from backend.app.routes.category_routes import category_blueprint
         from backend.app.routes.transaction_routes import transaction_blueprint
-        from backend.app.routes.sharing import bp as sharing_blueprint
+        from backend.app.routes.sharing_routes import bp as sharing_blueprint
         from backend.app.routes.kb_routes import kb_blueprint
 
         # Register all blueprints

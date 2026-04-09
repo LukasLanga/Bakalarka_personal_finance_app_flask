@@ -23,6 +23,7 @@ class DashboardState(BaseState):
     show_account_modal: bool = False
     show_manage_accounts_modal: bool = False
     show_invitation_modal: bool = False
+    show_bank_connect_alert: bool = False
     selected_invitation: Optional[Invitation] = None
     is_sidebar_collapsed: bool = True
     error_message: str = ""
@@ -80,7 +81,7 @@ class DashboardState(BaseState):
     @rx.var
     def category_options(self) -> List[Dict[str, str]]:
         """Returns a list of dictionaries with category names for the select component."""
-        return [{"label": cat.name, "value": cat.name} for cat in self.categories]
+        return [{"label": cat.name, "value": str(cat.id)} for cat in self.categories]
 
     @rx.var
     def spending_by_category_dict(self) -> List[Dict[str, Any]]:
@@ -191,6 +192,12 @@ class DashboardState(BaseState):
     def toggle_manage_accounts_modal(self):
         self.show_manage_accounts_modal = not self.show_manage_accounts_modal
 
+    def set_show_bank_connect_alert(self, show: bool):
+        self.show_bank_connect_alert = show
+
+    def toggle_bank_connect_alert(self):
+        self.show_bank_connect_alert = not self.show_bank_connect_alert
+
     async def handle_manage_modal_change(self, open: bool):
         from .manage_accounts_state import ManageAccountsState
         self.show_manage_accounts_modal = open
@@ -290,7 +297,7 @@ class DashboardState(BaseState):
         except Exception:
             self.is_kb_connected = False
 
-    async def connect_to_bank(self):
+    async def confirm_connect_to_bank(self):
         self.is_syncing = True
         self.error_message = ""
         try:
