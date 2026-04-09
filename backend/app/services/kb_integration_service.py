@@ -1,9 +1,9 @@
 
 import requests
 from datetime import datetime
-from backend.app.db import db
-from backend.app.models import Account, Transaction, UserAccountAccess, Psd2Connection
-from backend.app.services.kb_utils import _get_kb_certs
+from ..db import db
+from ..models import Account, Transaction, UserAccountAccess, Psd2Connection
+from .kb_utils import _get_kb_certs
 import os
 from collections import defaultdict
 

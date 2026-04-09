@@ -2,9 +2,9 @@ import os
 from flask import Flask
 from flask_login import LoginManager
 from flask_mail import Mail
-from backend.app.db import db
+from .db import db
 from dotenv import load_dotenv
-from backend.app.models import User
+from .models import User
 
 load_dotenv()
 
@@ -44,13 +44,13 @@ def create_app(test_config=None):
     mail.init_app(app)
 
     with app.app_context():
-        from backend.app.routes.auth import auth_blueprint
-        from backend.app.routes.account_routes import account_blueprint
-        from backend.app.routes.dashboard_routes import dashboard_blueprint
-        from backend.app.routes.category_routes import category_blueprint
-        from backend.app.routes.transaction_routes import transaction_blueprint
-        from backend.app.routes.sharing_routes import bp as sharing_blueprint
-        from backend.app.routes.kb_routes import kb_blueprint
+        from .routes.auth import auth_blueprint
+        from .routes.account_routes import account_blueprint
+        from .routes.dashboard_routes import dashboard_blueprint
+        from .routes.category_routes import category_blueprint
+        from .routes.transaction_routes import transaction_blueprint
+        from .routes.sharing_routes import bp as sharing_blueprint
+        from .routes.kb_routes import kb_blueprint
 
         # Register all blueprints
         app.register_blueprint(account_blueprint)

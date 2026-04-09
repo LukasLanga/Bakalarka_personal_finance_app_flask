@@ -6,10 +6,10 @@ import os
 import traceback
 from pathlib import Path
 from datetime import datetime, timedelta
-from backend.app.db import db
-from backend.app.models import Psd2Connection
-from backend.app.services.kb_integration_service import sync_single_kb_account
-from backend.app.services.kb_utils import _get_kb_certs
+from ..db import db
+from ..models import Psd2Connection
+from ..services.kb_integration_service import sync_single_kb_account
+from ..services.kb_utils import _get_kb_certs
 
 kb_blueprint = Blueprint('kb', __name__)
 

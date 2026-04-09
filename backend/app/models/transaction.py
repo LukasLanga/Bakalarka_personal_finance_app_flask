@@ -1,4 +1,4 @@
-from backend.app.db import db
+from ..db import db
 from sqlalchemy.orm import relationship
 
 class Transaction(db.Model):

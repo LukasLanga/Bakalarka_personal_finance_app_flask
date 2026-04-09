@@ -1,8 +1,8 @@
 from flask import Blueprint, request, jsonify
 from flask_login import login_required, current_user
-from backend.app.services.transaction_service import TransactionService
-from backend.app.services.auth_service import requires_role, get_user_role
-from backend.app.models.invitation import AccountRole
+from ..services.transaction_service import TransactionService
+from ..services.auth_service import requires_role, get_user_role
+from ..models.invitation import AccountRole
 from decimal import Decimal
 from datetime import datetime
 

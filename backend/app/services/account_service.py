@@ -1,5 +1,5 @@
-from backend.app.db import db
-from backend.app.models import User, Account, UserAccountAccess, Transaction
+from ..db import db
+from ..models import User, Account, UserAccountAccess, Transaction
 from sqlalchemy import func
 from sqlalchemy.orm import aliased
 

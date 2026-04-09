@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_login import login_required, current_user
-from backend.app.services.category_service import CategoryService
+from ..services.category_service import CategoryService
 
 category_blueprint = Blueprint('category', __name__)
 

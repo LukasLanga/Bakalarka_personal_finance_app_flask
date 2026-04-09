@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from flask_login import login_required, current_user
-from backend.app.services.transaction_service import TransactionService
+from ..services.transaction_service import TransactionService
 from datetime import datetime, timedelta
 from collections import defaultdict
 
