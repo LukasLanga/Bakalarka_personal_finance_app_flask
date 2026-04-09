@@ -152,6 +152,14 @@ TRANSLATIONS = {
         "Invalid email or password.": "Invalid email or password.",
         "Registration failed.": "Registration failed.",
         "An unknown registration error occurred.": "An unknown registration error occurred.",
+        "bank_connect_dialog_title": "Connect to Bank",
+        "bank_connect_dialog_description": "At this moment it is possible to connect only to demo account of KB.cz. Do you want to connect?",
+        "Yes": "Yes",
+        "No": "No",
+        "add_bank_account_title": "Add Bank Account",
+        "add_bank_account_description": "Select a bank account from the list to add it to your profile.",
+        "select_an_account_placeholder": "Select an account...",
+        "add_account_button": "Add Account"
     },
     "sk": {
         "Dashboard": "Prehľad",
@@ -306,6 +314,14 @@ TRANSLATIONS = {
         "Invalid email or password.": "Neplatný email alebo heslo.",
         "Registration failed.": "Registrácia zlyhala.",
         "An unknown registration error occurred.": "Vyskytla sa neznáma chyba pri registrácii.",
+        "bank_connect_dialog_title": "Pripojiť k banke",
+        "bank_connect_dialog_description": "V tejto chvíli je možné pripojiť sa iba k demo účtu KB.cz. Chcete sa pripojiť?",
+        "Yes": "Áno",
+        "No": "Nie",
+        "add_bank_account_title": "Pridať bankový účet",
+        "add_bank_account_description": "Vyberte bankový účet zo zoznamu a pridajte ho do svojho profilu.",
+        "select_an_account_placeholder": "Vyberte účet...",
+        "add_account_button": "Pridať účet"
     },
     "cz": {
         "Dashboard": "Přehled",
@@ -460,5 +476,13 @@ TRANSLATIONS = {
         "Invalid email or password.": "Neplatný e-mail nebo heslo.",
         "Registration failed.": "Registrace se nezdařila.",
         "An unknown registration error occurred.": "Vyskytla se neznámá chyba při registraci.",
+        "bank_connect_dialog_title": "Připojit k bance",
+        "bank_connect_dialog_description": "V tuto chvíli je možné se připojit pouze k demo účtu KB.cz. Chcete se připojit?",
+        "Yes": "Ano",
+        "No": "Ne",
+        "add_bank_account_title": "Přidat bankovní účet",
+        "add_bank_account_description": "Vyberte bankovní účet ze seznamu a přidejte ho do svého profilu.",
+        "select_an_account_placeholder": "Vyberte účet...",
+        "add_account_button": "Přidat účet"
     },
 }

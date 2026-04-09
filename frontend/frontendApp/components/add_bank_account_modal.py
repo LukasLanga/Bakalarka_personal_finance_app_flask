@@ -1,20 +1,21 @@
 import reflex as rx
 from ..state.add_bank_account_state import AddBankAccountState
+from ..state.dashboard_state import DashboardState
 
 def add_bank_account_modal() -> rx.Component:
     """A modal for adding a new bank account from a PSD2 connection."""
     return rx.alert_dialog.root(
         rx.alert_dialog.content(
-            rx.alert_dialog.title("Add Bank Account"),
+            rx.alert_dialog.title(DashboardState.translations["add_bank_account_title"]),
             rx.alert_dialog.description(
-                "Select a bank account from the list to add it to your profile."
+                DashboardState.translations["add_bank_account_description"]
             ),
             rx.vstack(
                 rx.cond(
                     AddBankAccountState.is_loading,
                     rx.center(rx.spinner()),
                     rx.select.root(
-                        rx.select.trigger(placeholder="Select an account..."),
+                        rx.select.trigger(placeholder=DashboardState.translations["select_an_account_placeholder"]),
                         rx.select.content(
                             rx.foreach(
                                 AddBankAccountState.available_account_options,
@@ -39,11 +40,16 @@ def add_bank_account_modal() -> rx.Component:
             ),
             rx.flex(
                 rx.alert_dialog.cancel(
-                    rx.button("Cancel", variant="soft", color_scheme="gray"),
+                    rx.button(
+                        DashboardState.translations["Cancel"],
+                        variant="soft",
+                        color_scheme="gray",
+                        on_click=AddBankAccountState.close_modal(False),
+                    ),
                 ),
                 rx.alert_dialog.action(
                     rx.button(
-                        "Add Account", 
+                        DashboardState.translations["add_account_button"],
                         on_click=AddBankAccountState.add_selected_account,
                         loading=AddBankAccountState.is_loading,
                     ),

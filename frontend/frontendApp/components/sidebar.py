@@ -66,6 +66,30 @@ def sidebar_nav_link(text: str, href: str, icon: str) -> rx.Component:
         _hover={"background_color": "var(--gray-a3)"},
     )
 
+def bank_connection_alert_dialog() -> rx.Component:
+    """Alert dialog for bank connection confirmation."""
+    return rx.alert_dialog.root(
+        rx.alert_dialog.content(
+            rx.alert_dialog.title(DashboardState.translations["bank_connect_dialog_title"]),
+            rx.alert_dialog.description(
+                DashboardState.translations["bank_connect_dialog_description"]
+            ),
+            rx.flex(
+                rx.alert_dialog.cancel(
+                    rx.button(DashboardState.translations["No"], variant="soft", color_scheme="gray"),
+                ),
+                rx.alert_dialog.action(
+                    rx.button(DashboardState.translations["Yes"], on_click=DashboardState.confirm_connect_to_bank),
+                ),
+                spacing="3",
+                margin_top="16px",
+                justify="end",
+            ),
+        ),
+        open=DashboardState.show_bank_connect_alert,
+        on_open_change=DashboardState.set_show_bank_connect_alert,
+    )
+
 def sidebar() -> rx.Component:
     """The main application sidebar."""
     return rx.box(
@@ -124,7 +148,7 @@ def sidebar() -> rx.Component:
                     ~DashboardState.is_kb_connected,
                     rx.button(
                         DashboardState.translations["Connect to Bank"],
-                        on_click=DashboardState.connect_to_bank,
+                        on_click=DashboardState.toggle_bank_connect_alert,
                         loading=DashboardState.is_syncing,
                         variant="outline",
                         width="100%",
@@ -151,6 +175,7 @@ def sidebar() -> rx.Component:
                     font_weight="700",
                 ),
             ),
+            bank_connection_alert_dialog(),
             padding="1.5em",
             spacing="5",
             width="288px",

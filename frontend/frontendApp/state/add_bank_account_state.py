@@ -44,6 +44,15 @@ class AddBankAccountState(BaseState):
         yield
         try:
             self.available_accounts = client.get_available_kb_accounts(self.get_http_client())
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 500:
+                try:
+                    client.connect_to_kb_bank(self.get_http_client())
+                    self.available_accounts = client.get_available_kb_accounts(self.get_http_client())
+                except Exception as refresh_e:
+                    self.error_message = f"Failed to refresh token and fetch accounts: {refresh_e}"
+            else:
+                self.error_message = f"Failed to fetch accounts: {e}"
         except Exception as e:
             self.error_message = f"Failed to fetch accounts: {e}"
         finally:

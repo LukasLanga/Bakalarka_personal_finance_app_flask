@@ -2,3 +2,8 @@
 .idea
 .web
 .states
+__pycache__/
+*.db
+*.py[cod]
+assets/external/
+certs/
