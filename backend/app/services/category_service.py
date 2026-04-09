@@ -1,8 +1,8 @@
 from sqlalchemy import or_, func
-from backend.app.db import db
-from backend.app.models import Category
-from backend.app.models.user import User
-from backend.app.models import Transaction
+from ..db import db
+from ..models import Category
+from ..models.user import User
+from ..models import Transaction
 
 class CategoryService:
 

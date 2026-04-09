@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime
 from enum import Enum
-from backend.app.db import db
+from ..db import db
 from sqlalchemy.sql import func
 
 class AccountRole(str, Enum):

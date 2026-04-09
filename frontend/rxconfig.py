@@ -9,4 +9,5 @@ load_dotenv(dotenv_path=dotenv_path)
 config = rx.Config(
     app_name="frontendApp",
     disable_plugins=['reflex.plugins.sitemap.SitemapPlugin'],
+    api_url="http://localhost:80",
 )

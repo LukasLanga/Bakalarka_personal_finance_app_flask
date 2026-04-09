@@ -1,8 +1,8 @@
-from backend.app.db import db
-from backend.app.models import Transaction, UserAccountAccess, Account, Category
-from backend.app.models.user import User
-from backend.app.services.account_service import AccountService
-from backend.app.services.category_service import CategoryService
+from ..db import db
+from ..models import Transaction, UserAccountAccess, Account, Category
+from ..models.user import User
+from .account_service import AccountService
+from .category_service import CategoryService
 from sqlalchemy import func, extract, or_
 from datetime import datetime
 from decimal import Decimal

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import relationship
-from backend.app.db import db
+from ..db import db
 import flask_login
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
