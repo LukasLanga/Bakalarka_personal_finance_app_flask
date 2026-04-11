@@ -8,10 +8,13 @@ def language_switcher() -> rx.Component:
             rx.button(
                 rx.hstack(
                     rx.icon("globe", size=16),
-                    rx.text(BaseState.locale.upper()),
-                    rx.icon("chevron-down", size=16),
+                    rx.icon(
+                        "chevron-down",
+                        size=16,
+                        display={"base": "none", "md": "block"},
+                    ),
                     align="center",
-                    spacing="2",
+                    spacing={"base": "0", "md": "2"},
                 ),
                 variant="soft",
             )

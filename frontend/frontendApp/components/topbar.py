@@ -6,11 +6,8 @@ from .language_switcher import language_switcher
 
 
 def dark_mode_toggle() -> rx.Component:
+    """A segmented control to toggle between light and dark mode."""
     return rx.segmented_control.root(
-        rx.segmented_control.item(
-            rx.icon(tag="monitor", size=20),
-            value="system",
-        ),
         rx.segmented_control.item(
             rx.icon(tag="sun", size=20),
             value="light",
@@ -116,7 +113,7 @@ def topbar() -> rx.Component:
                     size="3",
                 ),
             ),
-            dark_mode_toggle(), # Added dark mode toggle here
+            dark_mode_toggle(),
             language_switcher(),
             rx.button(
                 rx.icon("log-out", size=16),

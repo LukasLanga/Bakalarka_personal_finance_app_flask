@@ -76,7 +76,12 @@ def bank_connection_alert_dialog() -> rx.Component:
             ),
             rx.flex(
                 rx.alert_dialog.cancel(
-                    rx.button(DashboardState.translations["No"], variant="soft", color_scheme="gray"),
+                    rx.button(
+                        DashboardState.translations["No"],
+                        on_click=lambda: DashboardState.set_show_bank_connect_alert(False),
+                        variant="soft",
+                        color_scheme="gray"
+                    ),
                 ),
                 rx.alert_dialog.action(
                     rx.button(DashboardState.translations["Yes"], on_click=DashboardState.confirm_connect_to_bank),
