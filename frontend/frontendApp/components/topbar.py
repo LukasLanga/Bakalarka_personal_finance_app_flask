@@ -75,59 +75,65 @@ def topbar() -> rx.Component:
                 cursor="pointer",
             ),
             rx.spacer(),
-            rx.popover.root(
-                rx.popover.trigger(
-                    rx.box(
-                        rx.button(
-                            rx.icon("bell", size=16),
-                            variant="soft",
-                        ),
-                        rx.cond(
-                            DashboardState.pending_invitations_count > 0,
-                            rx.box(
-                                width="8px",
-                                height="8px",
-                                bg="red",
-                                border_radius="50%",
-                                position="absolute",
-                                top="6px",
-                                right="6px",
-                                border="2px solid var(--gray-1)",
+            rx.hstack(
+                rx.popover.root(
+                    rx.popover.trigger(
+                        rx.box(
+                            rx.button(
+                                rx.icon("bell", size=16),
+                                variant="soft",
                             ),
-                        ),
-                        position="relative",
-                    )
-                ),
-                rx.popover.content(
-                    rx.vstack(
-                        rx.cond(
-                            DashboardState.pending_invitations_count > 0,
-                            rx.foreach(
-                                DashboardState.pending_invitations,
-                                invitation_item,
+                            rx.cond(
+                                DashboardState.pending_invitations_count > 0,
+                                rx.box(
+                                    width="8px",
+                                    height="8px",
+                                    bg="red",
+                                    border_radius="50%",
+                                    position="absolute",
+                                    top="6px",
+                                    right="6px",
+                                    border="2px solid var(--gray-1)",
+                                ),
                             ),
-                            rx.text(DashboardState.translations["No new notifications."], padding="12px", size="2"),
-                        ),
-                        spacing="0",
+                            position="relative",
+                        )
                     ),
-                    size="3",
+                    rx.popover.content(
+                        rx.vstack(
+                            rx.cond(
+                                DashboardState.pending_invitations_count > 0,
+                                rx.foreach(
+                                    DashboardState.pending_invitations,
+                                    invitation_item,
+                                ),
+                                rx.text(DashboardState.translations["No new notifications."], padding="12px", size="2"),
+                            ),
+                            spacing="0",
+                        ),
+                        size="3",
+                    ),
                 ),
+                dark_mode_toggle(),
+                language_switcher(),
+                rx.button(
+                    rx.icon("log-out", size=16),
+                    on_click=DashboardState.logout,
+                    variant="soft",
+                    color_scheme="red",
+                ),
+                spacing="4",
+                align="center",
             ),
-            dark_mode_toggle(),
-            language_switcher(),
-            rx.button(
-                rx.icon("log-out", size=16),
-                on_click=DashboardState.logout,
-                variant="soft",
-                color_scheme="red",
-            ),
-            spacing="4",
             align="center",
+            width="100%",
         ),
-        padding="16px 24px",
+        padding_y="16px",
+        padding_x=["16px", "16px", "24px", "24px", "24px"],
         position="fixed",
         top="0",
         left="0",
         right="0",
         z_index="99",
+        background="var(--color-background)",
     )
