@@ -26,7 +26,7 @@ def password_input() -> rx.Component:
     return rx.box(
         rx.input(
             placeholder=LoginState.translations["Enter your password"],
-            on_blur=LoginState.set_password,
+            on_change=LoginState.set_password,
             type=rx.cond(LoginState.show_password, "text", "password"),
             style=input_style,
             padding_right="3.5em",
@@ -64,8 +64,12 @@ def login_page() -> rx.Component:
                 rx.vstack(
                     rx.vstack(
                         rx.text(LoginState.translations["Email Address"], style=label_style),
-                        rx.input(placeholder=LoginState.translations["name@example.com"], on_blur=LoginState.set_email,
-                                 type="email", style=input_style),
+                        rx.input(
+                            placeholder=LoginState.translations["name@example.com"],
+                            on_change=LoginState.set_email,
+                            type="email",
+                            style=input_style
+                        ),
                         spacing="2",
                         align="stretch",
                         width="100%",
