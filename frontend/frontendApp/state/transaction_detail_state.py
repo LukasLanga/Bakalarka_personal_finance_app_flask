@@ -153,7 +153,7 @@ class TransactionDetailState(BaseState):
 
             self.is_editing = False
             
-            return [DashboardState.load_dashboard_summary]
+            return DashboardState.on_page_load
 
         except Exception as e:
             self.error_message = f"Failed to update transaction: {e}"
@@ -167,7 +167,7 @@ class TransactionDetailState(BaseState):
         self.is_loading = True
         try:
             client.delete_transaction(self.get_http_client(), self.transaction.account_id, self.transaction.id)
-            return [DashboardState.load_dashboard_summary, rx.redirect("/")]
+            return [DashboardState.on_page_load, rx.redirect("/")]
         except Exception as e:
             self.error_message = f"Failed to delete transaction: {e}"
             self.is_loading = False
