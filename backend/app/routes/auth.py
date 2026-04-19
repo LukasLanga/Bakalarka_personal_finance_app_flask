@@ -67,7 +67,6 @@ def register():
     if User.query.filter_by(username=username).first():
         return jsonify({"ERROR": "Username already taken"}), 400
 
-    # 1. Create the user
     new_user = User(
         username=username,
         email=email.lower(),
@@ -122,8 +121,7 @@ def forgot_password():
         s = get_serializer()
         token = s.dumps(email, salt='password-reset-salt')
         
-        # The URL to webpage
-        reset_url = f"http://localhost:3000/reset-password/{token}"
+        reset_url = f"https://langa.dev/reset-password/{token}"
 
         msg = Message(
             'Password Reset Request',
