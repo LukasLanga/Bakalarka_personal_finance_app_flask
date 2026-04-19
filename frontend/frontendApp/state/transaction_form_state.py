@@ -103,7 +103,7 @@ class TransactionFormState(BaseState):
             )
             
             self.reset_form()
-            return [DashboardState.toggle_transaction_modal, DashboardState.load_accounts, DashboardState.load_dashboard_summary]
+            return [DashboardState.toggle_transaction_modal, DashboardState.on_page_load]
 
         except Exception as e:
             self.error_message = str(e)

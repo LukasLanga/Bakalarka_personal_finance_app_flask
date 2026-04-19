@@ -159,7 +159,12 @@ TRANSLATIONS = {
         "add_bank_account_title": "Add Bank Account",
         "add_bank_account_description": "Select a bank account from the list to add it to your profile.",
         "select_an_account_placeholder": "Select an account...",
-        "add_account_button": "Add Account"
+        "add_account_button": "Add Account",
+        "error_email_empty": "Email cannot be empty.",
+        "error_user_already_member": "This user is already a member of the account.",
+        "error_user_already_invited": "This user already has a pending invitation for this account.",
+        "This user already has a pending invitation for this account.": "This user already has a pending invitation for this account.",
+        "invitation_sent_success": "Invitation successfully sent to {email}."
     },
     "sk": {
         "Dashboard": "Prehľad",
@@ -321,7 +326,11 @@ TRANSLATIONS = {
         "add_bank_account_title": "Pridať bankový účet",
         "add_bank_account_description": "Vyberte bankový účet zo zoznamu a pridajte ho do svojho profilu.",
         "select_an_account_placeholder": "Vyberte účet...",
-        "add_account_button": "Pridať účet"
+        "add_account_button": "Pridať účet",
+        "error_email_empty": "E-mail nemôže byť prázdny.",
+        "error_user_already_member": "Tento používateľ je už členom účtu.",
+        "invitation_sent_success": "Pozvánka bola úspešne odoslaná na {email}.",
+        "This user already has a pending invitation for this account.": "Tento používateľ už má čakajúcu pozvánku na tento účet."
     },
     "cz": {
         "Dashboard": "Přehled",
@@ -483,6 +492,10 @@ TRANSLATIONS = {
         "add_bank_account_title": "Přidat bankovní účet",
         "add_bank_account_description": "Vyberte bankovní účet ze seznamu a přidejte ho do svého profilu.",
         "select_an_account_placeholder": "Vyberte účet...",
-        "add_account_button": "Přidat účet"
+        "add_account_button": "Přidat účet",
+        "error_email_empty": "E-mail nemůže být prázdný.",
+        "error_user_already_member": "Tento uživatel je již členem účtu.",
+        "This user already has a pending invitation for this account.": "Tento uživatel již má čekající pozvánku na tento účet..",
+        "invitation_sent_success": "Pozvánka byla úspěšně odeslána na {email}."
     },
 }
