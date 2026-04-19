@@ -1,5 +1,6 @@
 import reflex as rx
 from typing import List
+import httpx
 from ..models.models import Account, AccountUser
 from .base_state import BaseState
 from .dashboard_state import DashboardState
@@ -52,6 +53,7 @@ class ManageAccountsState(BaseState):
     def set_invite_email(self, value: str):
         self.invite_email = value
         self.invitation_sent_message = ""
+        self.error_message = ""
 
     def set_invite_role(self, value: str):
         self.invite_role = value
@@ -137,20 +139,41 @@ class ManageAccountsState(BaseState):
             self.error_message = f"Failed to remove user: {e}"
 
     async def invite_user(self):
+        self.error_message = ""
+        self.invitation_sent_message = ""
+        
+        dashboard_state = await self.get_state(DashboardState)
+        translations = dashboard_state.translations
+
         if not self.invite_email:
-            self.error_message = "Email cannot be empty."
-            self.invitation_sent_message = ""
+            self.error_message = translations.get("error_email_empty", "Email cannot be empty.")
             return
+
+        normalized_email = self.invite_email.lower().strip()
+
         try:
+            for user in self.account_users:
+                if user.email.lower() == normalized_email:
+                    self.error_message = translations.get("error_user_already_member", "This user is already a member of the account.")
+                    return
+
             client.invite_user_to_account(
                 self.get_http_client(),
                 account_id=self.account_to_edit.id,
-                email=self.invite_email,
+                email=normalized_email,
                 role=self.invite_role,
             )
-            self.invitation_sent_message = f"Invitation successfully sent to {self.invite_email}."
+            
+            success_template = translations.get("invitation_sent_success", "Invitation successfully sent to {email}.")
+            self.invitation_sent_message = success_template.format(email=self.invite_email)
             self.invite_email = ""
-            self.error_message = ""
+            
+        except httpx.HTTPStatusError as e:
+            try:
+                error_data = e.response.json()
+                error_key = error_data.get("detail", "error_unknown")
+                self.error_message = translations.get(error_key, error_key)
+            except Exception:
+                 self.error_message = f"Failed to send invitation: {e.response.status_code} - {e.response.text}"
         except Exception as e:
-            self.error_message = f"Failed to send invitation: {e}"
-            self.invitation_sent_message = ""
+            self.error_message = f"An unexpected error occurred: {e}"

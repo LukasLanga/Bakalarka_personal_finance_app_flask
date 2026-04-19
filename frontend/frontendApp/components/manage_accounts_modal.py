@@ -17,36 +17,44 @@ def user_access_row(user: AccountUser) -> rx.Component:
             spacing="0",
         ),
         rx.spacer(),
-        rx.select(
-            ["viewer", "editor", "manager", "owner"],
-            value=user.role,
-            on_change=lambda new_role: ManageAccountsState.update_user_role(user.id, new_role),
-            is_disabled=is_row_owner | (~can_current_user_manage),
-        ),
-        # Conditional remove/leave button
         rx.cond(
-            is_current_user_in_row,
-            # Show "Leave" button for self, unless owner
+            can_current_user_manage,
             rx.cond(
-                ~is_row_owner,
-                rx.button(
-                    ManageAccountsState.translations["Leave"],
-                    on_click=lambda: ManageAccountsState.remove_user(user.id),
-                    color_scheme="red",
-                    variant="soft",
+                is_row_owner,
+                rx.badge("Owner", color_scheme="purple", variant="solid", size="2"),
+                rx.select(
+                    ["viewer", "editor", "manager"],
+                    value=user.role,
+                    on_change=lambda new_role: ManageAccountsState.update_user_role(user.id, new_role),
                 ),
             ),
-            # Show "Remove" button for others, if manager/owner
+            rx.badge(user.role.capitalize(), variant="soft", color_scheme="gray", size="2")
+        ),
+        rx.box(
             rx.cond(
-                can_current_user_manage,
-                 rx.button(
-                    ManageAccountsState.translations["Remove"],
-                    on_click=lambda: ManageAccountsState.remove_user(user.id),
-                    color_scheme="red",
-                    variant="soft",
-                    is_disabled=is_row_owner,
-                ),
-            )
+                is_row_owner,
+                rx.fragment(),
+                rx.cond(
+                    is_current_user_in_row,
+                    rx.button(
+                        ManageAccountsState.translations["Leave"],
+                        on_click=lambda: ManageAccountsState.remove_user(user.id),
+                        color_scheme="red",
+                        variant="soft",
+                    ),
+                    rx.cond(
+                        can_current_user_manage,
+                        rx.button(
+                            ManageAccountsState.translations["Remove"],
+                            on_click=lambda: ManageAccountsState.remove_user(user.id),
+                            color_scheme="red",
+                            variant="soft",
+                        ),
+                    )
+                )
+            ),
+            min_width="80px",
+            text_align="right",
         ),
         align="center",
         width="100%",
@@ -156,6 +164,15 @@ def edit_account_form() -> rx.Component:
                             rx.callout.icon(rx.icon("check_check")),
                             rx.callout.text(ManageAccountsState.invitation_sent_message),
                             color_scheme="green",
+                            margin_top="12px",
+                        ),
+                    ),
+                    rx.cond(
+                        ManageAccountsState.error_message != "",
+                        rx.callout.root(
+                            rx.callout.icon(rx.icon("triangle_alert")),
+                            rx.callout.text(ManageAccountsState.error_message),
+                            color_scheme="red",
                             margin_top="12px",
                         ),
                     ),

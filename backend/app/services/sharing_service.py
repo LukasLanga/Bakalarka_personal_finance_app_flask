@@ -27,6 +27,21 @@ def create_invitation(account_id, invited_by_user, invited_email, role):
     if invited_email == invited_by_user.email.lower():
         raise ValueError("You cannot invite yourself to an account.")
 
+    user_exists_query = text("""
+        SELECT 1 FROM user_account_access uaa
+        JOIN users u ON uaa.user_id = u.id
+        WHERE uaa.account_id = :account_id AND u.email = :email
+    """)
+    if db.session.execute(user_exists_query, {"account_id": account_id, "email": invited_email}).scalar():
+        raise ValueError("409_conflict: User is already a member of this account.")
+
+    pending_invite_query = text("""
+        SELECT 1 FROM account_invitations
+        WHERE account_id = :account_id AND invited_email = :email AND status = 'pending'
+    """)
+    if db.session.execute(pending_invite_query, {"account_id": account_id, "email": invited_email}).scalar():
+        raise ValueError("409_conflict: This user already has a pending invitation for this account.")
+
     token = secrets.token_urlsafe(32)
     expires_at = datetime.now() + timedelta(days=7)
 
