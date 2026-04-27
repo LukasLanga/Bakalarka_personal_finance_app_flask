@@ -310,3 +310,31 @@ class DashboardState(BaseState):
         finally:
             self.is_syncing = False
             yield
+    
+    # --- Sidebar Actions ---
+    async def select_account_and_close_sidebar(self, account_id: int):
+        async for event in self.select_account(account_id):
+            yield event
+        self.toggle_sidebar()
+
+    async def toggle_account_modal_and_close_sidebar(self):
+        await self.toggle_account_modal()
+        self.toggle_sidebar()
+
+    def toggle_manage_accounts_modal_and_close_sidebar(self):
+        self.toggle_manage_accounts_modal()
+        self.toggle_sidebar()
+
+    def toggle_bank_connect_alert_and_close_sidebar(self):
+        self.toggle_bank_connect_alert()
+        self.toggle_sidebar()
+
+    async def open_add_bank_account_modal_and_close_sidebar(self):
+        from .add_bank_account_state import AddBankAccountState
+        add_bank_account_state = await self.get_state(AddBankAccountState)
+        add_bank_account_state.open_modal()
+        self.toggle_sidebar()
+
+    async def toggle_transaction_modal_and_close_sidebar(self):
+        await self.toggle_transaction_modal()
+        self.toggle_sidebar()

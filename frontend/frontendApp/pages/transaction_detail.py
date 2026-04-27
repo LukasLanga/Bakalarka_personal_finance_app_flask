@@ -19,15 +19,13 @@ def transaction_detail() -> rx.Component:
                 rx.vstack(
                     # Header
                     rx.hstack(
-                        rx.link(
-                            rx.hstack(
-                                rx.icon("arrow_left", size=20),
-                                rx.text(TransactionDetailState.translations["Back"], weight="medium"),
-                                align="center",
-                                spacing="2",
-                                color_scheme="gray",
-                            ),
-                            href="/",
+                        rx.button(
+                            rx.icon("arrow_left", size=20),
+                            TransactionDetailState.translations["Back"],
+                            on_click=rx.call_script("window.history.back()"),
+                            variant="ghost",
+                            color_scheme="gray",
+                            weight="medium",
                         ),
                         rx.spacer(),
                         width="100%",

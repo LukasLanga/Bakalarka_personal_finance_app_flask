@@ -80,20 +80,51 @@ def categories() -> rx.Component:
                     ),
                     
                     # Filters and Add Button
-                    rx.hstack(
-                        rx.tabs.root(
-                            rx.tabs.list(
-                                rx.tabs.trigger(CategoriesState.translations["All"], value="all"),
-                                rx.tabs.trigger(CategoriesState.translations["Expenses"], value="expense"),
-                                rx.tabs.trigger(CategoriesState.translations["Income"], value="income"),
+                    rx.box(
+                        # Mobile Layout
+                        rx.vstack(
+                            rx.button(
+                                CategoriesState.translations["Add Category"], 
+                                on_click=lambda: CategoriesState.toggle_add_category_modal(True), 
+                                color_scheme="green", 
+                                size="3",
+                                width="100%",
                             ),
-                            on_change=CategoriesState.set_filter_type,
-                            default_value="all",
+                            rx.tabs.root(
+                                rx.tabs.list(
+                                    rx.tabs.trigger(CategoriesState.translations["All"], value="all"),
+                                    rx.tabs.trigger(CategoriesState.translations["Expenses"], value="expense"),
+                                    rx.tabs.trigger(CategoriesState.translations["Income"], value="income"),
+                                ),
+                                on_change=CategoriesState.set_filter_type,
+                                default_value="all",
+                                width="100%",
+                            ),
+                            spacing="4",
+                            width="100%",
+                            display=["flex", "flex", "none", "none", "none"],
                         ),
-                        rx.spacer(),
-                        rx.button(CategoriesState.translations["Add Category"], on_click=lambda: CategoriesState.toggle_add_category_modal(True), color_scheme="green", size="3"),
-                        width="100%",
-                        justify="between",
+                        # Desktop Layout
+                        rx.hstack(
+                            rx.tabs.root(
+                                rx.tabs.list(
+                                    rx.tabs.trigger(CategoriesState.translations["All"], value="all"),
+                                    rx.tabs.trigger(CategoriesState.translations["Expenses"], value="expense"),
+                                    rx.tabs.trigger(CategoriesState.translations["Income"], value="income"),
+                                ),
+                                on_change=CategoriesState.set_filter_type,
+                                default_value="all",
+                            ),
+                            rx.spacer(),
+                            rx.button(
+                                CategoriesState.translations["Add Category"], 
+                                on_click=lambda: CategoriesState.toggle_add_category_modal(True), 
+                                color_scheme="green", 
+                                size="3"
+                            ),
+                            width="100%",
+                            display=["none", "none", "flex", "flex", "flex"],
+                        ),
                     ),
 
                     # Categories Table
@@ -101,8 +132,8 @@ def categories() -> rx.Component:
                         rx.table.header(
                             rx.table.row(
                                 rx.table.column_header_cell(CategoriesState.translations["Name"]),
-                                rx.table.column_header_cell(CategoriesState.translations["Type"]),
-                                rx.table.column_header_cell(CategoriesState.translations["Usage Count"]),
+                                rx.table.column_header_cell(CategoriesState.translations["Type"], display=["none", "none", "table-cell", "table-cell", "table-cell"]),
+                                rx.table.column_header_cell(CategoriesState.translations["Usage Count"], display=["none", "none", "table-cell", "table-cell", "table-cell"]),
                                 rx.table.column_header_cell(CategoriesState.translations["Actions"], text_align="right"),
                             )
                         ),
@@ -110,9 +141,16 @@ def categories() -> rx.Component:
                             rx.foreach(
                                 CategoriesState.filtered_categories,
                                 lambda cat: rx.table.row(
-                                    rx.table.cell(cat.name),
-                                    rx.table.cell(rx.badge(CategoriesState.translations[cat.type.capitalize()], color_scheme=rx.cond(cat.type == "income", "blue", "red"))),
-                                    rx.table.cell(cat.usage_count),
+                                    rx.table.cell(
+                                        rx.text(
+                                            cat.name,
+                                            white_space="normal",
+                                            word_break="break-word",
+                                            max_width=["120px", "150px", "250px", "300px", "350px"],
+                                        )
+                                    ),
+                                    rx.table.cell(rx.badge(CategoriesState.translations[cat.type.capitalize()], color_scheme=rx.cond(cat.type == "income", "blue", "red")), display=["none", "none", "table-cell", "table-cell", "table-cell"]),
+                                    rx.table.cell(cat.usage_count, display=["none", "none", "table-cell", "table-cell", "table-cell"]),
                                     rx.table.cell(
                                         rx.button(
                                             rx.icon("trash-2", size=16),

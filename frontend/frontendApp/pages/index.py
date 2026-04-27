@@ -99,7 +99,7 @@ def recent_transactions_table() -> rx.Component:
                 rx.table.header(
                     rx.table.row(
                         rx.table.column_header_cell(DashboardState.translations["NAME"]),
-                        rx.table.column_header_cell(DashboardState.translations["ACCOUNT"]),
+                        rx.table.column_header_cell(DashboardState.translations["ACCOUNT"], display=["none", "none", "table-cell", "table-cell", "table-cell"]),
                         rx.table.column_header_cell(DashboardState.translations["DATE"]),
                         rx.table.column_header_cell(DashboardState.translations["AMOUNT"], text_align="right"),
                         border_bottom="1px solid var(--gray-a5)",

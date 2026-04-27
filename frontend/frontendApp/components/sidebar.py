@@ -9,8 +9,8 @@ def sidebar_user_profile() -> rx.Component:
     return rx.hstack(
         rx.avatar(fallback=BaseState.logged_in_user.username[0], size="3"),
         rx.vstack(
-            rx.text(BaseState.logged_in_user.username, font_weight="700"),
-            rx.text(BaseState.logged_in_user.email, font_size="0.75em", color_scheme="gray"),
+            rx.text(BaseState.logged_in_user.username, font_weight="700", white_space="nowrap", overflow="hidden", text_overflow="ellipsis", max_width="140px"),
+            rx.text(BaseState.logged_in_user.email, font_size="0.75em", color_scheme="gray", white_space="nowrap", overflow="hidden", text_overflow="ellipsis", max_width="140px"),
             align_items="flex-start",
             spacing="1",
         ),
@@ -40,7 +40,7 @@ def sidebar_account_item(account: Account) -> rx.Component:
             align="center",
             width="100%",
         ),
-        on_click=DashboardState.select_account(account.id),
+        on_click=DashboardState.select_account_and_close_sidebar(account.id),
         variant=rx.cond(is_selected, "solid", "ghost"),
         color_scheme=rx.cond(is_selected, "grass", "gray"),
         border_radius="12px",
@@ -60,6 +60,7 @@ def sidebar_nav_link(text: str, href: str, icon: str) -> rx.Component:
             align="center",
         ),
         href=href,
+        on_click=DashboardState.toggle_sidebar,
         width="100%",
         padding="0.75em 1em",
         border_radius="12px",
@@ -118,7 +119,7 @@ def sidebar() -> rx.Component:
                     rx.spacer(),
                     rx.link(
                         DashboardState.translations["Add New"],
-                        on_click=DashboardState.toggle_account_modal,
+                        on_click=DashboardState.toggle_account_modal_and_close_sidebar,
                         font_weight="500",
                         font_size="0.75em",
                         color=PRIMARY_COLOR,
@@ -130,7 +131,7 @@ def sidebar() -> rx.Component:
                 rx.foreach(DashboardState.accounts, sidebar_account_item),
                 rx.button(
                     DashboardState.translations["Manage Accounts"],
-                    on_click=DashboardState.toggle_manage_accounts_modal,
+                    on_click=DashboardState.toggle_manage_accounts_modal_and_close_sidebar,
                     variant="soft",
                     width="100%",
                     margin_top="8px",
@@ -153,7 +154,7 @@ def sidebar() -> rx.Component:
                     ~DashboardState.is_kb_connected,
                     rx.button(
                         DashboardState.translations["Connect to Bank"],
-                        on_click=DashboardState.toggle_bank_connect_alert,
+                        on_click=DashboardState.toggle_bank_connect_alert_and_close_sidebar,
                         loading=DashboardState.is_syncing,
                         variant="outline",
                         width="100%",
@@ -161,7 +162,7 @@ def sidebar() -> rx.Component:
                 ),
                 rx.button(
                     DashboardState.translations["Add Bank Account"],
-                    on_click=AddBankAccountState.open_modal,
+                    on_click=DashboardState.open_add_bank_account_modal_and_close_sidebar,
                     disabled=~DashboardState.is_kb_connected,
                     width="100%",
                 ),
@@ -173,7 +174,7 @@ def sidebar() -> rx.Component:
                 DashboardState.can_add_transaction,
                 rx.button(
                     DashboardState.translations["Add Transaction"],
-                    on_click=DashboardState.toggle_transaction_modal,
+                    on_click=DashboardState.toggle_transaction_modal_and_close_sidebar,
                     width="100%",
                     height="48px",
                     color_scheme="grass",
