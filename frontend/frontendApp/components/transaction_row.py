@@ -32,6 +32,7 @@ def transaction_row(transaction: EnrichedTransaction) -> rx.Component:
                 padding_y="16px",
             ),
             vertical_align="middle",
+            display=["none", "none", "table-cell", "table-cell", "table-cell"],
         ),
         rx.table.cell(
             rx.link(

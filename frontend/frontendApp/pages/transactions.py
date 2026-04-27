@@ -28,6 +28,7 @@ def transactions() -> rx.Component:
                         align_items="center",
                         spacing="4",
                         width="100%",
+                        display=["none", "none", "flex", "flex", "flex"],
                     ),
                     
                     # Filters and Search
@@ -38,7 +39,7 @@ def transactions() -> rx.Component:
                                 placeholder=TransactionsState.translations["Search by name or description"],
                                 value=TransactionsState.search_query,
                                 on_change=TransactionsState.set_search_query,
-                                width="300px",
+                                width=["100%", "300px", "300px", "300px", "300px"],
                                 size="3",
                                 variant="surface",
                             ),
@@ -55,7 +56,8 @@ def transactions() -> rx.Component:
                                 value=TransactionsState.selected_account_filter,
                                 on_change=TransactionsState.set_selected_account_filter,
                                 size="3",
-                                variant="surface"
+                                variant="surface",
+                                display=["none", "flex", "flex", "flex", "flex"],
                             ),
                             rx.select.root(
                                 rx.select.trigger(placeholder=TransactionsState.translations["All Categories"]),
@@ -68,10 +70,13 @@ def transactions() -> rx.Component:
                                 value=TransactionsState.selected_category_filter,
                                 on_change=TransactionsState.set_selected_category_filter,
                                 size="3",
-                                variant="surface"
+                                variant="surface",
+                                display=["none", "flex", "flex", "flex", "flex"],
                             ),
                             width="100%",
                             align="center",
+                            flex_wrap="wrap",
+                            spacing="3",
                         ),
                         width="100%",
                         size="2",
@@ -96,7 +101,7 @@ def transactions() -> rx.Component:
                                     rx.table.header(
                                         rx.table.row(
                                             rx.table.column_header_cell(TransactionsState.translations["NAME"]),
-                                            rx.table.column_header_cell(TransactionsState.translations["ACCOUNT"]),
+                                            rx.table.column_header_cell(TransactionsState.translations["ACCOUNT"], display=["none", "none", "table-cell", "table-cell", "table-cell"]),
                                             rx.table.column_header_cell(TransactionsState.translations["DATE"]),
                                             rx.table.column_header_cell(TransactionsState.translations["AMOUNT"], text_align="right"),
                                         )
@@ -112,7 +117,7 @@ def transactions() -> rx.Component:
                                     width="100%",
                                 ),
                                 background_color="var(--gray-a2)",
-                                padding="1rem",
+                                padding=["0.5rem", "1rem", "1rem", "1rem", "1rem"],
                                 border_radius="var(--radius-3)",
                                 width="100%",
                             ),
@@ -132,13 +137,13 @@ def transactions() -> rx.Component:
                     ),
                     
                     spacing="5",
-                    padding="2em",
+                    padding=["1em", "1em", "2em", "2em", "2em"],
                     width="100%",
                 ),
-                padding_top="80px", # Adjust for topbar
+                padding_top=["60px", "60px", "80px", "80px", "80px"],
                 margin_left=["0", "0", "288px", "288px", "288px"],
                 width="100%",
-                padding_x="2em",
+                padding_x=["1em", "1em", "2em", "2em", "2em"],
             ),
             align_items="flex-start",
         ),
