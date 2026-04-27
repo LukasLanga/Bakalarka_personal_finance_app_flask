@@ -58,6 +58,7 @@ def transactions() -> rx.Component:
                                 size="3",
                                 variant="surface",
                                 display=["none", "flex", "flex", "flex", "flex"],
+                                width="180px",
                             ),
                             rx.select.root(
                                 rx.select.trigger(placeholder=TransactionsState.translations["All Categories"]),
@@ -72,6 +73,7 @@ def transactions() -> rx.Component:
                                 size="3",
                                 variant="surface",
                                 display=["none", "flex", "flex", "flex", "flex"],
+                                width="180px",
                             ),
                             width="100%",
                             align="center",
@@ -102,7 +104,7 @@ def transactions() -> rx.Component:
                                         rx.table.row(
                                             rx.table.column_header_cell(TransactionsState.translations["NAME"]),
                                             rx.table.column_header_cell(TransactionsState.translations["ACCOUNT"], display=["none", "none", "table-cell", "table-cell", "table-cell"]),
-                                            rx.table.column_header_cell(TransactionsState.translations["DATE"]),
+                                            rx.table.column_header_cell(TransactionsState.translations["DATE"], display=["none", "none", "table-cell", "table-cell", "table-cell"]),
                                             rx.table.column_header_cell(TransactionsState.translations["AMOUNT"], text_align="right"),
                                         )
                                     ),
