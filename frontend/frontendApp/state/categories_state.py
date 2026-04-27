@@ -75,7 +75,8 @@ class CategoriesState(BaseState):
         try:
             client.create_category(self.get_http_client(), self.new_category_name, self.new_category_type.lower())
             self.toggle_add_category_modal(False)
-            await self.load_categories()
+            async for event in self.load_categories():
+                yield event
         except Exception as e:
             self.error_message = f"Failed to create category: {e}"
 
@@ -86,6 +87,7 @@ class CategoriesState(BaseState):
         try:
             client.delete_category(self.get_http_client(), self.category_to_delete_id)
             self.close_delete_confirmation()
-            await self.load_categories()
+            async for event in self.load_categories():
+                yield event
         except Exception as e:
             self.error_message = f"Failed to delete category: {e}"
