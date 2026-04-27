@@ -9,8 +9,8 @@ def sidebar_user_profile() -> rx.Component:
     return rx.hstack(
         rx.avatar(fallback=BaseState.logged_in_user.username[0], size="3"),
         rx.vstack(
-            rx.text(BaseState.logged_in_user.username, font_weight="700"),
-            rx.text(BaseState.logged_in_user.email, font_size="0.75em", color_scheme="gray"),
+            rx.text(BaseState.logged_in_user.username, font_weight="700", white_space="nowrap", overflow="hidden", text_overflow="ellipsis", max_width="140px"),
+            rx.text(BaseState.logged_in_user.email, font_size="0.75em", color_scheme="gray", white_space="nowrap", overflow="hidden", text_overflow="ellipsis", max_width="140px"),
             align_items="flex-start",
             spacing="1",
         ),
